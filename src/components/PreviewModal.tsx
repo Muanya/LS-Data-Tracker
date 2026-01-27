@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   X, Calendar, Users, Activity, CheckCircle, 
   AlertCircle, Save, Edit2, Clock, Hash,
-  UserCheck, Mail, Phone, MapPin
+  UserCheck, Mail, Phone
 } from 'lucide-react';
 import type { User } from '../utils/types';
 import { Card } from './ui/Card';
