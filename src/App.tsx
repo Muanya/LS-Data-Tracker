@@ -1,16 +1,38 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
 import Attendance from './pages/Attendance'
+import Dashboard from './pages/Dashboard'
+import Auth from './pages/Auth'
+import ProtectedRoute from './utils/ProtectedRoute'
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Attendance />} />
-     
+      {/* Public route - Auth page */}
+      <Route path="/" element={<Auth />} />
+      
+      {/* Protected routes - require authentication */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/attendance" 
+        element={
+          <ProtectedRoute>
+            <Attendance />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Catch all - redirect to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-
-
-  )
+  );
 }
 
-export default App
+export default App;

@@ -4,7 +4,8 @@ import {
   Users, Calendar, Save, CheckCircle,
   Moon, Sun, Sparkles,
   Activity, Target, RefreshCw, ShieldCheck,
-  Download, Eye
+  Download, Eye,
+  LogOut
 } from 'lucide-react';
 import type { User, Activity as ActivityType } from '../utils/types';
 import { UserList } from '../components/UserList';
@@ -195,6 +196,8 @@ const Attendance: React.FC = () => {
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
+            <Button variant='danger' icon={LogOut} onClick={UtilService.handleLogout} />
+
           </div>
         </div>
       </header>
