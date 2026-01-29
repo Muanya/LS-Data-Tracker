@@ -54,12 +54,12 @@ export interface DateRange {
 
 
 export interface Activity {
-  id: string;
-  name: string;
-  frequency: string;
-  icon: React.ReactNode;
-  color: string;
-  gradient: string;
+    id: string;
+    name: string;
+    frequency: string;
+    icon: React.ReactNode;
+    color: string;
+    gradient: string;
 }
 
 export interface BulkAttendanceResponse {
@@ -74,10 +74,96 @@ export interface BulkAttendanceResponse {
 
 
 export interface Message {
-  text: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+    text: string;
+    type: 'success' | 'error' | 'info' | 'warning';
 }
 
+
+
+export interface Attendee {
+    id: string;
+    name: string;
+    email?: string;
+}
+
+
+export interface ActivityStats {
+    totalAttendees: number;
+    attendanceRate: string;
+    peakTime: string;
+    topAttendee: string;
+    dailyAverage: number;
+    uniqueAttendees: number;
+}
+
+export interface DashboardActivity extends Activity {
+    stats: ActivityStats;
+}
+
+export interface SummaryMetrics {
+    totalParticipants: number;
+    totalRecords: number;
+    avgAttendanceRate: string;
+    mostPopularActivity: string;
+    peakHours: string;
+    crossActivityRate: string;
+}
+
+export interface TrendDataPoint {
+    day: string;
+    [key: string]: number | string;
+}
+
+export interface CrossActivityAttendee {
+    attendeeId: string;
+    attendeeName: string;
+    activities: string[];
+    activityCount: number;
+}
+
+export interface ActivityOverlap {
+    pair: string;
+    overlap: string;
+    correlation: 'High' | 'Medium' | 'Low';
+}
+
+export interface CrossActivityData {
+    multiActivityAttendees: CrossActivityAttendee[];
+    activityOverlaps: ActivityOverlap[];
+    crossActivityRate: string;
+}
+
+export interface DashboardData {
+    summary: SummaryMetrics;
+    activities: DashboardActivity[];
+    trends: {
+        labels: string[];
+        datasets: Array<{
+            label: string;
+            data: number[];
+            borderColor: string;
+        }>;
+    };
+    crossActivity: CrossActivityData;
+    lastUpdated: string;
+}
+
+export interface ApiResponse<T> {
+    success: boolean;
+    data: T;
+    error?: string;
+    message?: string;
+
+}
+
+export interface AddAttendanceRequest {
+    activityId: string;
+    attendeeId: string;
+    attendeeName: string;
+    date?: string;
+    timestamp?: string;
+    checkinType?: string;
+}
 
 export type ViewType = 'record' | 'summary';
 export type SummaryViewType = 'activity' | 'attendee';

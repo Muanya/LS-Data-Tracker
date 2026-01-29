@@ -1,21 +1,22 @@
-import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse } from '../utils/types';
+import axios, { type AxiosInstance } from 'axios';
+import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse, ApiResponse, DashboardData } from '../utils/types';
+import { environment } from '../environment';
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbzkSZBQ1sDzY5xUDGR99yMc_31JwtET0zBccq4QX2HzkiZBJ1fxj20n6WxUnjaR1y7EEA/exec';
+const API_URL = environment.BASE_API_URL;
 
-interface ApiResponse<T> {
-    success: boolean;
-    data: T;
-    message?: string;
-}
+class ApiService {
+    private client: AxiosInstance;
 
-export class ApiService {
-    static async getAttendees(): Promise<User[]> {
+    constructor() {
+        this.client = axios.create({
+            baseURL: API_URL,
+            timeout: 10000
+        });
+    }
+
+    async getAttendees(): Promise<User[]> {
         try {
-            const response = await fetch(`${API_URL}?action=getAttendees`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<User[]> = await response.json();
+            const result: ApiResponse<User[]> = (await this.client.get('', { params: { action: 'getAttendees' } })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch attendees');
             }
@@ -25,13 +26,9 @@ export class ApiService {
         }
     }
 
-    static async getCircleGroups(): Promise<CircleGroup[]> {
+    async getCircleGroups(): Promise<CircleGroup[]> {
         try {
-            const response = await fetch(`${API_URL}?action=getCircleGroups`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<CircleGroup[]> = await response.json();
+            const result: ApiResponse<CircleGroup[]> = (await this.client.get('', { params: { action: 'getCircleGroups' } })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch circle groups');
             }
@@ -41,13 +38,11 @@ export class ApiService {
         }
     }
 
-    static async getAllAttendance(startDate: string, endDate: string): Promise<AttendanceRecord[]> {
+    async getAllAttendance(startDate: string, endDate: string): Promise<AttendanceRecord[]> {
         try {
-            const response = await fetch(`${API_URL}?action=getAllAttendance&startDate=${startDate}&endDate=${endDate}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<AttendanceRecord[]> = await response.json();
+            const result: ApiResponse<AttendanceRecord[]> = (await this.client.get('', { 
+                params: { action: 'getAllAttendance', startDate, endDate } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch attendance records');
             }
@@ -57,15 +52,11 @@ export class ApiService {
         }
     }
 
-    static async getAllActivitySummaries(startDate: string, endDate: string): Promise<Record<string, ActivitySummary>> {
+    async getAllActivitySummaries(startDate: string, endDate: string): Promise<Record<string, ActivitySummary>> {
         try {
-            const response = await fetch(
-                `${API_URL}?action=getAllActivitySummaries&startDate=${startDate}&endDate=${endDate}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<Record<string, ActivitySummary>> = await response.json();
+            const result: ApiResponse<Record<string, ActivitySummary>> = (await this.client.get('', { 
+                params: { action: 'getAllActivitySummaries', startDate, endDate } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch activity summaries');
             }
@@ -75,15 +66,11 @@ export class ApiService {
         }
     }
 
-    static async getAllAttendeeSummaries(startDate: string, endDate: string): Promise<AttendeeSummary[]> {
+    async getAllAttendeeSummaries(startDate: string, endDate: string): Promise<AttendeeSummary[]> {
         try {
-            const response = await fetch(
-                `${API_URL}?action=getAllAttendeeSummaries&startDate=${startDate}&endDate=${endDate}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<AttendeeSummary[]> = await response.json();
+            const result: ApiResponse<AttendeeSummary[]> = (await this.client.get('', { 
+                params: { action: 'getAllAttendeeSummaries', startDate, endDate } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch attendee summaries');
             }
@@ -93,13 +80,11 @@ export class ApiService {
         }
     }
 
-    static async searchAttendee(name: string): Promise<User[]> {
+    async searchAttendee(name: string): Promise<User[]> {
         try {
-            const response = await fetch(`${API_URL}?action=searchAttendee&name=${encodeURIComponent(name)}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<User[]> = await response.json();
+            const result: ApiResponse<User[]> = (await this.client.get('', { 
+                params: { action: 'searchAttendee', name } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to search attendees');
             }
@@ -109,13 +94,11 @@ export class ApiService {
         }
     }
 
-    static async searchCircleGroup(name: string): Promise<CircleGroup[]> {
+    async searchCircleGroup(name: string): Promise<CircleGroup[]> {
         try {
-            const response = await fetch(`${API_URL}?action=searchCircleGroup&name=${encodeURIComponent(name)}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<CircleGroup[]> = await response.json();
+            const result: ApiResponse<CircleGroup[]> = (await this.client.get('', { 
+                params: { action: 'searchCircleGroup', name } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to search circle groups');
             }
@@ -125,7 +108,7 @@ export class ApiService {
         }
     }
 
-    static async addAttendee(firstName: string, lastName: string, email: string, phone?: string): Promise<User> {
+    async addAttendee(firstName: string, lastName: string, email: string, phone?: string): Promise<User> {
         try {
             const body = new URLSearchParams({
                 action: 'addAttendee',
@@ -134,15 +117,7 @@ export class ApiService {
                 email: email.trim(),
                 ...(phone ? { phone: phone.trim() } : {})
             });
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body
-
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<User> = await response.json();
+            const result: ApiResponse<User> = (await this.client.post('', body)).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to add attendee');
             }
@@ -152,20 +127,13 @@ export class ApiService {
         }
     }
 
-    static async addCircleGroup(name: string): Promise<CircleGroup> {
+    async addCircleGroup(name: string): Promise<CircleGroup> {
         try {
             const body = new URLSearchParams({
                 action: 'addCircleGroup',
                 name: name.trim()
             });
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<CircleGroup> = await response.json();
+            const result: ApiResponse<CircleGroup> = (await this.client.post('', body)).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to add circle group');
             }
@@ -175,7 +143,7 @@ export class ApiService {
         }
     }
 
-    static async recordAttendance(data: {
+    async recordAttendance(data: {
         attendees: Array<{
             id: string;
             name: string;
@@ -195,24 +163,14 @@ export class ApiService {
                 ...(data.groupName ? { groupName: data.groupName } : {})
             });
 
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const result = await response.json();
+            const result = (await this.client.post('', body)).data;
             return result;
-
         } catch (error) {
             throw new Error(`Failed to record bulk attendance: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
-    static async removeAttendance(data: {
+    async removeAttendance(data: {
         attendeeId: string;
         activity: string;
         date: string;
@@ -226,14 +184,7 @@ export class ApiService {
                 date: data.date,
                 ...(data.groupId ? { groupId: data.groupId } : {})
             });
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body
-            });
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result = await response.json();
+            const result = (await this.client.post('', body)).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to remove attendance');
             }
@@ -243,15 +194,11 @@ export class ApiService {
         }
     }
 
-    static async getActivitySummary(activity: string, startDate: string, endDate: string): Promise<ActivitySummary> {
+    async getActivitySummary(activity: string, startDate: string, endDate: string): Promise<ActivitySummary> {
         try {
-            const response = await fetch(
-                `${API_URL}?action=getActivitySummary&activity=${activity}&startDate=${startDate}&endDate=${endDate}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<ActivitySummary> = await response.json();
+            const result: ApiResponse<ActivitySummary> = (await this.client.get('', { 
+                params: { action: 'getActivitySummary', activity, startDate, endDate } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch activity summary');
             }
@@ -261,15 +208,11 @@ export class ApiService {
         }
     }
 
-    static async getAttendeeSummary(attendeeId: string, startDate: string, endDate: string): Promise<AttendeeSummary> {
+    async getAttendeeSummary(attendeeId: string, startDate: string, endDate: string): Promise<AttendeeSummary> {
         try {
-            const response = await fetch(
-                `${API_URL}?action=getAttendeeSummary&attendeeId=${attendeeId}&startDate=${startDate}&endDate=${endDate}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result: ApiResponse<AttendeeSummary> = await response.json();
+            const result: ApiResponse<AttendeeSummary> = (await this.client.get('', { 
+                params: { action: 'getAttendeeSummary', attendeeId, startDate, endDate } 
+            })).data;
             if (!result.success) {
                 throw new Error(result.message || 'Failed to fetch attendee summary');
             }
@@ -278,4 +221,36 @@ export class ApiService {
             throw new Error(`Failed to get attendee summary: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
+
+    // Dashboard Data
+    async getDashboardData(): Promise<DashboardData> {
+        try {
+            const result: ApiResponse<DashboardData> = (await this.client.get('', {
+                params: { action: 'getDashboardData' }
+            })).data;
+            if (!result.success) {
+                throw new Error(result.message || 'No data received from server');
+            }
+            return result.data;
+        } catch (error) {
+            throw new Error(`Failed to fetch dashboard data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    // Health Check
+    async healthCheck(): Promise<boolean> {
+        try {
+            await this.client.get('', {
+                params: { action: 'health' },
+                timeout: 5000
+            });
+            return true;
+        } catch (error) {
+            console.warn('Health check failed:', error instanceof Error ? error.message : 'Unknown error');
+            return false;
+        }
+    }
 }
+
+// Export singleton instance
+export default new ApiService();

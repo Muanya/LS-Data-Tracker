@@ -1,10 +1,10 @@
-// AttendanceApp.tsx (Updated)
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, Calendar, Save, CheckCircle,
   Moon, Sun, Sparkles,
   Activity, Target, RefreshCw, ShieldCheck,
-  Download, Eye
+  Download, Eye,
+  AlertCircle
 } from 'lucide-react';
 import type { User, Activity as ActivityType } from '../utils/types';
 import { UserList } from '../components/UserList';
@@ -13,13 +13,15 @@ import { PreviewModal } from '../components/PreviewModal';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { ApiService } from '../services/apiService';
+import apiService from '../services/apiService';
 import { UtilService } from '../services/utilService';
+import { useAttendeesData } from '../hooks/useAttendanceData';
+import Header from '../components/Header';
+
 
 
 const Attendance: React.FC = () => {
   // State
-  const [attendees, setAttendees] = useState<User[]>([]);
   const [selectedAttendees, setSelectedAttendees] = useState<User[]>([]);
   const [activities] = useState<ActivityType[]>([
     { id: 'Med', name: 'Meditation', frequency: 'Weekly', icon: <Moon />, color: 'blue', gradient: 'from-blue-500 to-cyan-500' },
@@ -32,18 +34,47 @@ const Attendance: React.FC = () => {
     new Date().toISOString().split('T')[0]
   );
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' }>({ text: '', type: 'info' });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    todayAttendance: 0,
-    monthlyAvg: 0,
-    activityStats: {}
-  });
+
+  // Use the custom hook for data fetching
+  const { data: attendeesData, isLoading, error, refetch } = useAttendeesData();
+
+  // Process attendees data when loaded
+  const attendees = useMemo(() => {
+    if (!attendeesData) return [];
+    return UtilService.processUser(attendeesData);
+  }, [attendeesData]);
+
+  // Compute stats
+  const stats = useMemo(() => {
+    const totalUsers = attendees.length;
+    const todayAttendance = selectedAttendees.length; // Using selected attendees for today
+
+    // Calculate monthly average (placeholder logic - adjust as needed)
+    const monthlyAvg = totalUsers > 0
+      ? Math.min(Math.round((selectedAttendees.length / totalUsers) * 100), 100)
+      : 0;
+
+    // Calculate activity stats (placeholder - implement based on your needs)
+    const activityStats = activities.reduce((acc, activity) => {
+      acc[activity.id] = {
+        total: Math.floor(Math.random() * 50) + 10, // Replace with actual data
+        average: Math.floor(Math.random() * 30) + 5
+      };
+      return acc;
+    }, {} as Record<string, { total: number; average: number }>);
+
+    return {
+      totalUsers,
+      todayAttendance,
+      monthlyAvg,
+      activityStats
+    };
+  }, [attendees.length, selectedAttendees.length, activities]);
 
   // Filter attendees based on search
   const filteredAttendees = useMemo(() => {
@@ -58,33 +89,14 @@ const Attendance: React.FC = () => {
     );
   }, [attendees, searchQuery]);
 
-  // Load initial data
+  // Show message when data loads or errors occur
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const temp = await ApiService.getAttendees();
-      const data = UtilService.processUser(temp);
-      setAttendees(data);
-
-      // TODO: Fetch and compute stats properly
-      setStats({
-        totalUsers: data.length,
-        todayAttendance: 12,
-        monthlyAvg: 85,
-        activityStats: {}
-      });
-
-      showMessage('Data loaded successfully', 'success');
-    } catch (error) {
+    if (error) {
       showMessage('Failed to load data', 'error');
-    } finally {
-      setLoading(false);
+    } else if (attendeesData && !isLoading) {
+      showMessage('Data loaded successfully', 'success');
     }
-  };
+  }, [error, attendeesData, isLoading]);
 
   const showMessage = (text: string, type: 'success' | 'error' | 'info' = 'info') => {
     setMessage({ text, type });
@@ -100,18 +112,19 @@ const Attendance: React.FC = () => {
   };
 
   const handleCreateAttendee = async (data: { firstName: string; lastName: string; email: string; phone?: string }) => {
-    setLoading(true);
     try {
-      const newAttendeeTemp = await ApiService.addAttendee(data.firstName, data.lastName, data.email, data.phone);
+      const newAttendeeTemp = await apiService.addAttendee(data.firstName, data.lastName, data.email, data.phone);
       const newAttendee = UtilService.processUser([newAttendeeTemp])[0];
-      setAttendees(prev => [...prev, newAttendee]);
+
+      // Invalidate and refetch the attendees data
+      await refetch();
+
+      // Add to selected attendees
       setSelectedAttendees(prev => [...prev, newAttendee]);
       setShowCreateModal(false);
       showMessage('Attendee created successfully', 'success');
     } catch (error) {
       showMessage('Failed to create attendee', 'error');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -123,8 +136,15 @@ const Attendance: React.FC = () => {
 
     setSaving(true);
     try {
-      const dataToSave = { attendees: selectedAttendees.map(a => ({ id: a.id, name: a.firstName + ' ' + a.lastName })), activity: selectedActivity, date: selectedDate };
-      await ApiService.recordAttendance(dataToSave);
+      const dataToSave = {
+        attendees: selectedAttendees.map(a => ({
+          id: a.id,
+          name: a.firstName + ' ' + a.lastName
+        })),
+        activity: selectedActivity,
+        date: selectedDate
+      };
+      await apiService.recordAttendance(dataToSave);
       showMessage(`Attendance saved for ${selectedAttendees.length} attendees`, 'success');
       setSelectedAttendees([]);
       setShowPreviewModal(false);
@@ -161,6 +181,7 @@ const Attendance: React.FC = () => {
             }`}>
             <div className="flex items-center gap-3">
               {message.type === 'success' && <CheckCircle className="w-5 h-5" />}
+              {message.type === 'error' && <AlertCircle className="w-5 h-5" />}
               <span className="font-medium">{message.text}</span>
             </div>
           </div>
@@ -168,36 +189,18 @@ const Attendance: React.FC = () => {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-soft">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-success-500 rounded-full border-2 border-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">LS Data Tracker</h1>
-                <p className="text-sm text-gray-500"> User Attendance System</p>
-              </div>
-            </div>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`p-3 rounded-2xl transition-all duration-300 ${darkMode
-                ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header title="Take Attendance" >
+        {/* Theme Toggle */}
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className={`p-3 rounded-2xl transition-all duration-300 ${darkMode
+            ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+        >
+          {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </button>
+      </Header>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -343,7 +346,7 @@ const Attendance: React.FC = () => {
                     variant="primary"
                     icon={Save}
                     loading={saving}
-                    onClick={handlePreview}
+                    onClick={handleSaveAttendance}
                     disabled={selectedAttendees.length === 0}
                     fullWidth
                   >
@@ -364,7 +367,7 @@ const Attendance: React.FC = () => {
               onCreateNew={() => setShowCreateModal(true)}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
-              isLoading={loading}
+              isLoading={isLoading}
             />
           </div>
         </div>
@@ -385,8 +388,8 @@ const Attendance: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 icon={RefreshCw}
-                onClick={loadData}
-                loading={loading}
+                onClick={() => refetch()}
+                loading={isLoading}
               >
                 Refresh
               </Button>
@@ -407,7 +410,7 @@ const Attendance: React.FC = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateAttendee}
-        loading={loading}
+        loading={isLoading}
       />
 
       {/* Preview Modal */}
