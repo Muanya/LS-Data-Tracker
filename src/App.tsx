@@ -4,34 +4,42 @@ import Attendance from './pages/Attendance'
 import Dashboard from './pages/Dashboard'
 import Auth from './pages/Auth'
 import ProtectedRoute from './utils/ProtectedRoute'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClient } from './services/queryClient'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 function App() {
   return (
-    <Routes>
-      {/* Public route - Auth page */}
-      <Route path="/" element={<Auth />} />
-      
-      {/* Protected routes - require authentication */}
-      <Route 
-        path="/dashboard" 
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/attendance" 
-        element={
-          <ProtectedRoute>
-            <Attendance />
-          </ProtectedRoute>
-        } 
-      />
-      
-      {/* Catch all - redirect to home */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <QueryClientProvider client={queryClient}>
+        <div className="App">
+          <Routes>
+            {/* Public route - Auth page */}
+            <Route path="/" element={<Auth />} />
+            
+            {/* Protected routes - require authentication */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/attendance" 
+              element={
+                <ProtectedRoute>
+                  <Attendance />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 
