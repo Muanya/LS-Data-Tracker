@@ -1,4 +1,4 @@
-import type { Activity, CircleGroup, User } from "../utils/types";
+import type { User } from "../utils/types";
 
 export class UtilService {
 

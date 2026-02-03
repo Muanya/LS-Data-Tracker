@@ -48,7 +48,7 @@ const Attendance: React.FC = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   const { data: attendeesData, isLoading, error, refetch } = useAttendeesData();
-  const { data: circleGroupsData, isLoading: isCircleGroupsLoading, error: circleGroupsError, refetch: refetchCircleGroups } = useCircleGroupsData();
+  const { data: circleGroupsData, isLoading: isCircleGroupsLoading, refetch: refetchCircleGroups } = useCircleGroupsData();
 
 
   // Process attendees data when loaded
