@@ -19,7 +19,6 @@ import { UtilService } from '../services/utilService';
 import { useAttendeesData, useCircleGroupsData } from '../hooks/useAttendanceData';
 import Header from '../components/Header';
 import ActivitySelectModal from '../components/AcitivitySelectModal';
-import { set } from 'date-fns';
 
 
 
