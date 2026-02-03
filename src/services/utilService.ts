@@ -1,6 +1,7 @@
 import type { User } from "../utils/types";
 
 export class UtilService {
+
     static processUser(temp: User[]) {
         return temp.map(user => ({
             ...user,

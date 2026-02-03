@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import apiService from '../services/apiService';
-import type { DashboardData, User } from '../utils/types';
+import type { CircleGroup, DashboardData, User } from '../utils/types';
 
 // Query keys
 export const attendanceKeys = {
     all: ['attendance'] as const,
     dashboard: () => [...attendanceKeys.all, 'dashboard'] as const,
     users: () => [...attendanceKeys.all, 'users'] as const,
+    circleGroups: () => [...attendanceKeys.all, 'circle', 'groups'] as const,
 } as const;
 
 
@@ -35,6 +36,14 @@ export const useAttendeesData = () => {
     return useQuery<User[], Error>({
         queryKey: attendanceKeys.users(),
         queryFn: () => apiService.getAttendees(),
+        refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    });
+};
+
+export const useCircleGroupsData = () => {
+    return useQuery<CircleGroup[], Error>({
+        queryKey: attendanceKeys.circleGroups(),
+        queryFn: () => apiService.getCircleGroups(),
         refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     });
 };

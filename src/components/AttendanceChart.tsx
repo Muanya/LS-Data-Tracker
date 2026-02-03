@@ -1,13 +1,13 @@
 import React from 'react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  Legend 
+  Legend
 } from 'recharts';
 import type { DashboardActivity } from '../utils/types';
 
@@ -60,30 +60,30 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends })
           <option value="quarter">This Quarter</option>
         </select>
       </div>
-      
+
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-            <XAxis 
-              dataKey="day" 
+            <XAxis
+              dataKey="day"
               stroke="#6b7280"
               fontSize={12}
             />
-            <YAxis 
+            <YAxis
               stroke="#6b7280"
               fontSize={12}
-              label={{ 
-                value: 'Attendees', 
-                angle: -90, 
+              label={{
+                value: 'Attendees',
+                angle: -90,
                 position: 'insideLeft',
                 fontSize: 12,
                 fill: '#6b7280'
               }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Legend 
-              verticalAlign="top" 
+            <Legend
+              verticalAlign="top"
               height={36}
               wrapperStyle={{ fontSize: '12px' }}
             />
@@ -101,12 +101,12 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends })
           </LineChart>
         </ResponsiveContainer>
       </div>
-      
+
       <div className="flex flex-wrap gap-3 mt-6 justify-center">
         {activities.map((activity) => (
           <div key={activity.id} className="flex items-center">
-            <div 
-              className="w-3 h-3 rounded-full mr-2" 
+            <div
+              className="w-3 h-3 rounded-full mr-2"
               style={{ backgroundColor: activity.color }}
             ></div>
             <span className="text-sm text-gray-600">{activity.name}</span>

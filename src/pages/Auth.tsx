@@ -18,8 +18,8 @@ const Auth = () => {
   }, [navigate]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();    
-    
+    e.preventDefault();
+
     if (passphrase === CORRECT_PASSPHRASE) {
       setError(false);
       // Store authentication in localStorage
@@ -35,9 +35,9 @@ const Auth = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-logo">
-          <img 
-            src="https://lakesidecentre.org/assets/images/logo.svg?v=b3553521f6" 
-            alt="Lakeside Study Centre Logo" 
+          <img
+            src="https://lakesidecentre.org/assets/images/logo.svg?v=b3553521f6"
+            alt="Lakeside Study Centre Logo"
             className="logo-image"
           />
         </div>

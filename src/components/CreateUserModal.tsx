@@ -39,7 +39,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
-        
+
         {/* Modal */}
         <div className="relative w-full max-w-md">
           <Card className="animate-slide-up">

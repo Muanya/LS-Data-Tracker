@@ -18,21 +18,21 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, error, onRetry }) 
             <AlertCircle className="w-8 h-8 text-red-600" />
             <h2 className="text-xl font-semibold text-red-900">{message}</h2>
           </div>
-          
+
           {error && (
             <div className="mb-4 p-3 bg-red-100 rounded-lg">
               <p className="text-sm text-red-800 font-medium">Error Details:</p>
               <p className="text-sm text-red-700 mt-1">{error.message}</p>
             </div>
           )}
-          
+
           <p className="text-gray-600 mb-6">
             Please check your internet connection and ensure the backend API is running.
           </p>
-          
+
           {onRetry && (
             <Button
-            icon={RefreshCw}
+              icon={RefreshCw}
               onClick={onRetry}
               fullWidth={true}
               variant='danger'
@@ -40,7 +40,7 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({ message, error, onRetry }) 
               Retry Connection
             </Button>
           )}
-          
+
           <div className="mt-6 pt-4 border-t border-red-200">
             <p className="text-sm text-gray-500">
               If the problem persists, contact your system administrator.

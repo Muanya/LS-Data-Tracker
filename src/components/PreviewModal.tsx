@@ -1,7 +1,7 @@
 // components/PreviewModal.tsx
 import React from 'react';
-import { 
-  X, Calendar, Users, Activity, CheckCircle, 
+import {
+  X, Calendar, Users, Activity, CheckCircle,
   AlertCircle, Save, Edit2, Clock, Hash,
   UserCheck, Mail, Phone
 } from 'lucide-react';
@@ -17,6 +17,7 @@ interface PreviewModalProps {
   onEdit: () => void;
   selectedAttendees: User[];
   selectedActivity: string;
+  selectedCircleGroup: string;
   selectedDate: string;
   activities: Array<{
     id: string;
@@ -36,6 +37,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
   onEdit,
   selectedAttendees,
   selectedActivity,
+  selectedCircleGroup,
   selectedDate,
   activities,
   loading = false,
@@ -70,7 +72,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity animate-fade-in"
           onClick={onClose}
         />
-        
+
         {/* Modal */}
         <div className="relative w-full max-w-4xl">
           <Card className="animate-slide-up max-h-[90vh] flex flex-col">
@@ -86,7 +88,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                     <p className="text-gray-600">Preview and confirm attendance details</p>
                   </div>
                 </div>
-                
+
                 {/* Summary Badges */}
                 <div className="flex flex-wrap items-center gap-3 mt-4">
                   <Badge variant="primary">
@@ -103,7 +105,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                   </Badge>
                 </div>
               </div>
-              
+
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
@@ -137,6 +139,12 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                             <Hash className="w-4 h-4" />
                             <span>ID: {selectedActivity}</span>
                           </div>
+                          {selectedCircleGroup && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Users className="w-4 h-4" />
+                              <span>Circle Group: {selectedCircleGroup}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -193,7 +201,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                               className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
                               style={{ backgroundColor: attendee.avatarColor }}
                             >
-                              {getInitials(attendee.firstName + ' ' + attendee.lastName )}
+                              {getInitials(attendee.firstName + ' ' + attendee.lastName)}
                             </div>
                             {!attendee.lastAttendance && (
                               <div className="absolute -top-1 -right-1">
@@ -203,7 +211,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                               </div>
                             )}
                           </div>
-                          
+
                           {/* Details */}
                           <div className="flex-1 min-w-0">
                             <h5 className="font-semibold text-gray-900 truncate">{attendee.firstName}</h5>
@@ -221,7 +229,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Stats */}
                             <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-100">
                               <div className="flex items-center gap-1 text-sm">
@@ -238,7 +246,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Check Mark */}
                         <div className="absolute top-3 right-3">
                           <CheckCircle className="w-5 h-5 text-green-500" />

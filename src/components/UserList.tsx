@@ -1,4 +1,3 @@
-// components/AttendeeList.tsx
 import React, { useState } from 'react';
 import { Search, UserPlus, Filter, Check, X, Users, Calendar } from 'lucide-react';
 import type { User } from '../utils/types';
@@ -53,7 +52,7 @@ export const UserList: React.FC<UserListProps> = ({
             {selectedAttendees.length} of {users.length} selected
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 lg:flex-none">
@@ -66,16 +65,15 @@ export const UserList: React.FC<UserListProps> = ({
               className="w-full lg:w-64 pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
-          
+
           {/* View Toggle */}
           <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-lg">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'grid' 
-                  ? 'bg-white text-primary-600 shadow-sm' 
+              className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
+                  ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-gray-600 hover:text-primary-600'
-              }`}
+                }`}
             >
               <div className="w-5 h-5 grid grid-cols-2 gap-0.5">
                 {[...Array(4)].map((_, i) => (
@@ -85,11 +83,10 @@ export const UserList: React.FC<UserListProps> = ({
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'list' 
-                  ? 'bg-white text-primary-600 shadow-sm' 
+              className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
+                  ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-gray-600 hover:text-primary-600'
-              }`}
+                }`}
             >
               <div className="w-5 h-5 flex flex-col justify-between">
                 {[...Array(3)].map((_, i) => (
@@ -98,7 +95,7 @@ export const UserList: React.FC<UserListProps> = ({
               </div>
             </button>
           </div>
-          
+
           {/* Create New */}
           <Button
             variant="secondary"
@@ -114,16 +111,15 @@ export const UserList: React.FC<UserListProps> = ({
       <div className="flex flex-wrap items-center gap-3">
         <button
           onClick={() => setFilterActive(!filterActive)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-            filterActive 
-              ? 'bg-primary-50 text-primary-700 border border-primary-200' 
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${filterActive
+              ? 'bg-primary-50 text-primary-700 border border-primary-200'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
+            }`}
         >
           <Filter className="w-4 h-4" />
           Filters
         </button>
-        
+
         {selectedAttendees.length > 0 && (
           <div className="flex flex-wrap gap-2">
             <Badge variant="primary">
@@ -174,9 +170,8 @@ export const UserList: React.FC<UserListProps> = ({
               <Card
                 key={attendee.id}
                 hoverable
-                className={`relative cursor-pointer transition-all duration-300 ${
-                  selected ? 'ring-2 ring-primary-500 ring-offset-2' : ''
-                }`}
+                className={`relative cursor-pointer transition-all duration-300 ${selected ? 'ring-2 ring-primary-500 ring-offset-2' : ''
+                  }`}
               >
                 <div
                   onClick={() => selected ? onDeselect(attendee.id) : onSelect(attendee)}
@@ -189,7 +184,7 @@ export const UserList: React.FC<UserListProps> = ({
                       </div>
                     </div>
                   )}
-                  
+
                   <div className="flex items-start gap-3">
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold"
@@ -197,7 +192,7 @@ export const UserList: React.FC<UserListProps> = ({
                     >
                       {getInitials(attendee.firstName + ' ' + attendee.lastName)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-gray-900 truncate">
                         {attendee.firstName} {attendee.lastName}
@@ -207,7 +202,7 @@ export const UserList: React.FC<UserListProps> = ({
                           {attendee.email}
                         </p>
                       )}
-                      
+
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center gap-1 text-sm text-gray-600">
                           <Calendar className="w-3 h-3" />
@@ -256,9 +251,8 @@ export const UserList: React.FC<UserListProps> = ({
                   return (
                     <tr
                       key={attendee.id}
-                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${
-                        selected ? 'bg-primary-50' : ''
-                      }`}
+                      className={`hover:bg-gray-50 cursor-pointer transition-colors ${selected ? 'bg-primary-50' : ''
+                        }`}
                       onClick={() => selected ? onDeselect(attendee.id) : onSelect(attendee)}
                     >
                       <td className="px-6 py-4">
