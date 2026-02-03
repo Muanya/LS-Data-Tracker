@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { UtilService } from '../services/utilService';
 import { Button } from './ui/Button';

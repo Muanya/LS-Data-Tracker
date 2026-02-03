@@ -1,4 +1,3 @@
-// components/HealthStatus.tsx
 import React from 'react';
 import { Wifi, WifiOff, Loader2 } from 'lucide-react';
 
@@ -18,9 +17,8 @@ const HealthStatus: React.FC<HealthStatusProps> = ({ isHealthy, isLoading }) => 
   }
 
   return (
-    <div className={`flex items-center gap-2 ${
-      isHealthy ? 'text-green-600' : 'text-red-600'
-    }`}>
+    <div className={`flex items-center gap-2 ${isHealthy ? 'text-green-600' : 'text-red-600'
+      }`}>
       {isHealthy ? (
         <Wifi className="w-5 h-5" />
       ) : (

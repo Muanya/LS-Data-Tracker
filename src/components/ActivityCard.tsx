@@ -25,7 +25,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
   };
 
   return (
-    <div 
+    <div
       className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 hover:shadow-lg transition-all duration-200 border-l-4"
       style={{ borderLeftColor: activity.color }}
     >
@@ -36,42 +36,42 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
             <p className="text-gray-600 text-xs sm:text-sm mt-0.5 line-clamp-1">{activity.name}</p>
           )}
         </div>
-        <div 
-          className="w-4 h-4 rounded-full flex-shrink-0" 
+        <div
+          className="w-4 h-4 rounded-full flex-shrink-0"
           style={{ backgroundColor: activity.color }}
           title={`Activity ${activity.id}`}
         ></div>
       </div>
-      
+
       <div className="space-y-2 sm:space-y-3">
-        <StatItem 
-          label="Total Attendees" 
-          value={stats.totalAttendees.toString()} 
+        <StatItem
+          label="Total Attendees"
+          value={stats.totalAttendees.toString()}
           icon={<Users className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
-        <StatItem 
-          label="Attendance Rate" 
-          value={stats.attendanceRate} 
+        <StatItem
+          label="Attendance Rate"
+          value={stats.attendanceRate}
           icon={<TrendingUp className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
-        <StatItem 
-          label="Unique Attendees" 
-          value={stats.uniqueAttendees.toString()} 
+        <StatItem
+          label="Unique Attendees"
+          value={stats.uniqueAttendees.toString()}
           icon={<User className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
-        <StatItem 
-          label="Daily Average" 
-          value={stats.dailyAverage.toString()} 
+        <StatItem
+          label="Daily Average"
+          value={stats.dailyAverage.toString()}
           icon={<Calendar className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
-        <StatItem 
-          label="Peak Time" 
-          value={stats.peakTime} 
+        <StatItem
+          label="Peak Time"
+          value={stats.peakTime}
           icon={<Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
-        <StatItem 
-          label="Top Attendee" 
-          value={stats.topAttendee} 
+        <StatItem
+          label="Top Attendee"
+          value={stats.topAttendee}
           icon={<BarChart className="w-3.5 sm:w-4 h-3.5 sm:h-4" />}
         />
       </div>

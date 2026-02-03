@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
             </Header>
 
             {/* Add transition to main content */}
-            <main className="p-4 sm:p-5 md:p-6 lg:ml-64 transition-all duration-300 max-w-7xl mx-auto lg:mx-0">
+            <main className="p-4 sm:p-5 md:p-6 transition-all duration-300 max-w-7xl mx-auto lg:mx-0">
                 {/* Summary Metrics */}
                 <SummaryMetrics summary={data.summary} />
 

@@ -74,7 +74,7 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className={`h-2 rounded-full ${item.correlation === 'High' ? 'bg-green-500' :
-                        item.correlation === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
+                      item.correlation === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
                       }`}
                     style={{
                       width: `${parseInt(item.overlap)}%`,
@@ -84,7 +84,7 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 mt-1">
                   <span className={`text-xs ${item.correlation === 'High' ? 'text-green-600' :
-                      item.correlation === 'Medium' ? 'text-amber-600' : 'text-red-600'
+                    item.correlation === 'Medium' ? 'text-amber-600' : 'text-red-600'
                     }`}>
                     {item.correlation} correlation
                   </span>

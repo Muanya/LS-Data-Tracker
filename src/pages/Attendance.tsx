@@ -19,6 +19,7 @@ import { UtilService } from '../services/utilService';
 import { useAttendeesData, useCircleGroupsData } from '../hooks/useAttendanceData';
 import Header from '../components/Header';
 import ActivitySelectModal from '../components/AcitivitySelectModal';
+import { set } from 'date-fns';
 
 
 
@@ -73,6 +74,7 @@ const Attendance: React.FC = () => {
     if (!circleGroupsData) return [];
     const cg = processCircleGroups(circleGroupsData);
     setCircleGroups(cg);
+    setSelectedCircleGroup(cg[0]);
   }, [circleGroupsData]);
 
   // Compute stats
@@ -326,7 +328,7 @@ const Attendance: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary-500" />
-                    Select Activity
+                    Selected Activity
                   </h3>
                   <div className="space-y-3">
                     <button
@@ -376,7 +378,7 @@ const Attendance: React.FC = () => {
                     ) : circleGroups.length == 0 ? (
                       <div className="text-center py-8">
                         <div className="text-gray-500 mb-2">No circle groups available</div>
-                        <Button variant="danger" onClick={()=> refetchCircleGroups()}>
+                        <Button variant="danger" onClick={() => refetchCircleGroups()}>
                           Retry
                         </Button>
                       </div>
