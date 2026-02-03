@@ -17,6 +17,7 @@ interface PreviewModalProps {
   onEdit: () => void;
   selectedAttendees: User[];
   selectedActivity: string;
+  selectedCircleGroup: string;
   selectedDate: string;
   activities: Array<{
     id: string;
@@ -36,6 +37,7 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
   onEdit,
   selectedAttendees,
   selectedActivity,
+  selectedCircleGroup,
   selectedDate,
   activities,
   loading = false,
@@ -137,6 +139,12 @@ export const PreviewModal: React.FC<PreviewModalProps> = ({
                             <Hash className="w-4 h-4" />
                             <span>ID: {selectedActivity}</span>
                           </div>
+                          {selectedCircleGroup && (
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <Users className="w-4 h-4" />
+                              <span>Circle Group: {selectedCircleGroup}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

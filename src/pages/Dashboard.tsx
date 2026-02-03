@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
                 title="Dashboard"
                 subtitle={`Last updated: ${new Date(data.lastUpdated).toLocaleString()}`}
             >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
                     <HealthStatus isHealthy={isHealthy} isLoading={healthLoading} />
 
                     <Button variant='primary' onClick={handleTakeAttendance}>
@@ -71,7 +71,7 @@ const Dashboard: React.FC = () => {
 
                     <button
                         onClick={() => refetch()}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                        className="px-3 sm:px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm sm:text-base"
                     >
                         Refresh
                     </button>
@@ -79,15 +79,15 @@ const Dashboard: React.FC = () => {
             </Header>
 
             {/* Add transition to main content */}
-            <main className="p-4 md:p-6 lg:ml-64 transition-all duration-300">
+            <main className="p-4 sm:p-5 md:p-6 lg:ml-64 transition-all duration-300 max-w-7xl mx-auto lg:mx-0">
                 {/* Summary Metrics */}
                 <SummaryMetrics summary={data.summary} />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
                     {/* Activity Cards */}
-                    <div className="lg:col-span-2">
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Activities Overview</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Activities Overview</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             {data.activities.map((activity) => (
                                 <ActivityCard key={activity.id} activity={activity} />
                             ))}
@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Attendance Trends Chart */}
-                    <div className="lg:col-span-1">
+                    <div className="md:col-span-1">
                         <AttendanceChart activities={data.activities} trends={data.trends} />
                     </div>
                 </div>

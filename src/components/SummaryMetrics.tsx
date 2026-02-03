@@ -60,11 +60,11 @@ const SummaryMetrics: React.FC<SummaryMetricsProps> = ({ summary }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
       {metrics.map((metric, index) => (
         <div 
           key={index} 
-          className="bg-white rounded-xl shadow-sm p-5 hover:shadow-md transition-shadow"
+          className="bg-white rounded-lg sm:rounded-xl shadow-sm p-4 sm:p-5 hover:shadow-md transition-shadow"
         >
           <div className="flex items-center justify-between mb-4">
             <div className={`p-2 rounded-lg ${metric.color}`}>
@@ -78,9 +78,9 @@ const SummaryMetrics: React.FC<SummaryMetricsProps> = ({ summary }) => {
               {metric.change}
             </span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</h3>
-          <p className="text-gray-900 font-medium text-sm mb-1">{metric.title}</p>
-          <p className="text-gray-500 text-xs">{metric.description}</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{metric.value}</h3>
+          <p className="text-gray-900 font-medium text-xs sm:text-sm mb-1">{metric.title}</p>
+          <p className="text-gray-500 text-xs hidden sm:block">{metric.description}</p>
         </div>
       ))}
     </div>

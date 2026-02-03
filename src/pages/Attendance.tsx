@@ -4,9 +4,10 @@ import {
   Moon, Sun, Sparkles,
   Activity, Target, RefreshCw, ShieldCheck,
   Download, Eye,
-  AlertCircle
+  AlertCircle,
+  ChevronRight
 } from 'lucide-react';
-import type { User, Activity as ActivityType } from '../utils/types';
+import type { User, Activity as ActivityType, CircleGroup } from '../utils/types';
 import { UserList } from '../components/UserList';
 import { CreateUserModal } from '../components/CreateUserModal';
 import { PreviewModal } from '../components/PreviewModal';
@@ -15,8 +16,9 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import apiService from '../services/apiService';
 import { UtilService } from '../services/utilService';
-import { useAttendeesData } from '../hooks/useAttendanceData';
+import { useAttendeesData, useCircleGroupsData } from '../hooks/useAttendanceData';
 import Header from '../components/Header';
+import ActivitySelectModal from '../components/AcitivitySelectModal';
 
 
 
@@ -29,7 +31,10 @@ const Attendance: React.FC = () => {
     { id: 'Recollection', name: 'Recollection', frequency: 'Monthly', icon: <Activity />, color: 'emerald', gradient: 'from-emerald-500 to-green-500' },
     { id: 'Retreat', name: 'Retreat', frequency: 'Yearly', icon: <Target />, color: 'amber', gradient: 'from-amber-500 to-orange-500' },
   ]);
-  const [selectedActivity, setSelectedActivity] = useState<string>('Med');
+
+  const [circleGroups, setCircleGroups] = useState<ActivityType[]>([]);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(activities[0]);
+  const [selectedCircleGroup, setSelectedCircleGroup] = useState<ActivityType | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
@@ -38,10 +43,13 @@ const Attendance: React.FC = () => {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' }>({ text: '', type: 'info' });
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showSelectActivityModal, setShowSelectActivityModal] = useState(false);
+  const [showSelectCircleModal, setShowSelectCircleModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Use the custom hook for data fetching
   const { data: attendeesData, isLoading, error, refetch } = useAttendeesData();
+  const { data: circleGroupsData, isLoading: isCircleGroupsLoading, error: circleGroupsError, refetch: refetchCircleGroups } = useCircleGroupsData();
+
 
   // Process attendees data when loaded
   const attendees = useMemo(() => {
@@ -49,20 +57,37 @@ const Attendance: React.FC = () => {
     return UtilService.processUser(attendeesData);
   }, [attendeesData]);
 
+  const processCircleGroups = (circleGroupsData: CircleGroup[]): ActivityType[] => {
+    return circleGroupsData.map(cg => ({
+      id: cg.id,
+      name: cg.name,
+      frequency: 'Weekly',
+      icon: <Users />,
+      color: 'amber',
+      gradient: 'from-amber-500 to-orange-500'
+    }));
+
+  }
+
+  useMemo(() => {
+    if (!circleGroupsData) return [];
+    const cg = processCircleGroups(circleGroupsData);
+    setCircleGroups(cg);
+  }, [circleGroupsData]);
+
   // Compute stats
   const stats = useMemo(() => {
     const totalUsers = attendees.length;
-    const todayAttendance = selectedAttendees.length; // Using selected attendees for today
+    const todayAttendance = selectedAttendees.length;
 
     // Calculate monthly average (placeholder logic - adjust as needed)
     const monthlyAvg = totalUsers > 0
       ? Math.min(Math.round((selectedAttendees.length / totalUsers) * 100), 100)
       : 0;
 
-    // Calculate activity stats (placeholder - implement based on your needs)
     const activityStats = activities.reduce((acc, activity) => {
       acc[activity.id] = {
-        total: Math.floor(Math.random() * 50) + 10, // Replace with actual data
+        total: Math.floor(Math.random() * 50) + 10,
         average: Math.floor(Math.random() * 30) + 5
       };
       return acc;
@@ -134,6 +159,16 @@ const Attendance: React.FC = () => {
       return;
     }
 
+    if (!selectedDate) {
+      showMessage('Please select a date', 'error');
+      return;
+    }
+
+    if (selectedActivity.id === 'Circle' && selectedCircleGroup === null) {
+      showMessage('Please select a circle group', 'error');
+      return;
+    }
+
     setSaving(true);
     try {
       const dataToSave = {
@@ -141,8 +176,10 @@ const Attendance: React.FC = () => {
           id: a.id,
           name: a.firstName + ' ' + a.lastName
         })),
-        activity: selectedActivity,
-        date: selectedDate
+        activity: selectedActivity.id,
+        date: selectedDate,
+        groupId: selectedCircleGroup!.id,
+        groupName: selectedCircleGroup!.name
       };
       await apiService.recordAttendance(dataToSave);
       showMessage(`Attendance saved for ${selectedAttendees.length} attendees`, 'success');
@@ -163,7 +200,14 @@ const Attendance: React.FC = () => {
     setShowPreviewModal(true);
   };
 
-  const selectedActivityData = activities.find(a => a.id === selectedActivity);
+  const openSelectActivityModal = () => {
+    setShowSelectActivityModal(true);
+  };
+
+  const openSelectCircleGroupModal = () => {
+    setShowSelectCircleModal(true);
+  };
+
 
   return (
     <div className={`min-h-screen transition-colors duration-500 ${darkMode
@@ -190,7 +234,6 @@ const Attendance: React.FC = () => {
 
       {/* Header */}
       <Header title="Take Attendance" >
-        {/* Theme Toggle */}
         <button
           onClick={() => setDarkMode(!darkMode)}
           className={`p-3 rounded-2xl transition-all duration-300 ${darkMode
@@ -235,11 +278,11 @@ const Attendance: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Activity</p>
                 <p className="text-lg font-bold text-gray-900 mt-2">
-                  {selectedActivityData?.name}
+                  {selectedActivity?.name}
                 </p>
               </div>
-              <div className={`w-12 h-12 bg-gradient-to-r ${selectedActivityData?.gradient} rounded-xl flex items-center justify-center`}>
-                {selectedActivityData?.icon}
+              <div className={`w-12 h-12 bg-gradient-to-r ${selectedActivity?.gradient} rounded-xl flex items-center justify-center`}>
+                {selectedActivity.icon}
               </div>
             </div>
           </Card>
@@ -265,39 +308,6 @@ const Attendance: React.FC = () => {
           <div className="lg:col-span-1">
             <Card>
               <div className="space-y-6">
-                {/* Activity Selection */}
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary-500" />
-                    Select Activity
-                  </h3>
-                  <div className="space-y-3">
-                    {activities.map((activity) => (
-                      <button
-                        key={activity.id}
-                        onClick={() => setSelectedActivity(activity.id)}
-                        className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${selectedActivity === activity.id
-                          ? `border-${activity.color}-500 bg-${activity.color}-50 ring-2 ring-${activity.color}-200`
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                      >
-                        <div className={`w-12 h-12 bg-gradient-to-r ${activity.gradient} rounded-xl flex items-center justify-center`}>
-                          <div className="w-6 h-6 text-white">
-                            {activity.icon}
-                          </div>
-                        </div>
-                        <div className="text-left flex-1">
-                          <div className="font-semibold text-gray-900">{activity.name}</div>
-                          <div className="text-sm text-gray-500">{activity.frequency}</div>
-                        </div>
-                        {selectedActivity === activity.id && (
-                          <CheckCircle className="w-5 h-5 text-primary-500" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Date Selection */}
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Select Date</h3>
@@ -311,6 +321,93 @@ const Attendance: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Activity Selection */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary-500" />
+                    Select Activity
+                  </h3>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => openSelectActivityModal()}
+                      className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${selectedActivity
+                        ? `border-${selectedActivity.color}-500 bg-${selectedActivity.color}-50 ring-2 ring-${selectedActivity.color}-200`
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                    >
+                      <div className={`w-12 h-12 bg-gradient-to-r ${selectedActivity?.gradient} rounded-xl flex items-center justify-center`}>
+                        <div className="w-6 h-6 text-white">
+                          {selectedActivity?.icon}
+                        </div>
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="font-semibold text-gray-900">{selectedActivity?.name}</div>
+                        <div className="text-sm text-gray-500">{selectedActivity?.frequency}</div>
+                      </div>
+
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+
+                {/* Circle Group Selection - only when circle is selected */}
+                {selectedActivity?.id === 'Circle' && (
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary-500" />
+                      Selected Circle Group
+                    </h3>
+                    {isCircleGroupsLoading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {[...Array(8)].map((_, i) => (
+                          <Card key={i} className="animate-pulse">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gray-200 rounded-xl" />
+                              <div className="space-y-2 flex-1">
+                                <div className="h-4 bg-gray-200 rounded w-3/4" />
+                                <div className="h-3 bg-gray-200 rounded w-1/2" />
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : circleGroups.length == 0 ? (
+                      <div className="text-center py-8">
+                        <div className="text-gray-500 mb-2">No circle groups available</div>
+                        <Button variant="danger" onClick={()=> refetchCircleGroups()}>
+                          Retry
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => openSelectCircleGroupModal()}
+                          className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${selectedCircleGroup
+                            ? `border-${selectedCircleGroup.color}-500 bg-${selectedCircleGroup.color}-50 ring-2 ring-${selectedCircleGroup.color}-200`
+                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                            }`}
+                        >
+                          <div className={`w-12 h-12 bg-gradient-to-r ${selectedCircleGroup?.gradient} rounded-xl flex items-center justify-center`}>
+                            <div className="w-6 h-6 text-white">
+                              {selectedCircleGroup?.icon}
+                            </div>
+                          </div>
+                          <div className="text-left flex-1">
+                            <div className="font-semibold text-gray-900">{selectedCircleGroup?.name}</div>
+                            <div className="text-sm text-gray-500">{selectedCircleGroup?.frequency}</div>
+                          </div>
+
+                          <ChevronRight className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
+
+                  </div>
+
+                )}
+
 
                 {/* Quick Stats */}
                 <div>
@@ -420,10 +517,28 @@ const Attendance: React.FC = () => {
         onSubmit={handleSaveAttendance}
         onEdit={() => setShowPreviewModal(false)}
         selectedAttendees={selectedAttendees}
-        selectedActivity={selectedActivity}
+        selectedActivity={selectedActivity.id}
+        selectedCircleGroup={selectedCircleGroup?.name || ''}
         selectedDate={selectedDate}
         activities={activities}
         loading={saving}
+      />
+      {/* Activity Select Modal */}
+      <ActivitySelectModal
+        isOpen={showSelectActivityModal}
+        selectedActivity={selectedActivity.id}
+        onClose={() => setShowSelectActivityModal(false)}
+        activities={activities}
+        onSelectActivity={(activity) => setSelectedActivity(activity)}
+      />
+
+      {/* Circle Select Modal Select Modal */}
+      <ActivitySelectModal
+        isOpen={showSelectCircleModal}
+        selectedActivity={selectedCircleGroup?.id || ''}
+        onClose={() => setShowSelectCircleModal(false)}
+        activities={circleGroups}
+        onSelectActivity={(circleGroup) => setSelectedCircleGroup(circleGroup)}
       />
     </div>
   );
