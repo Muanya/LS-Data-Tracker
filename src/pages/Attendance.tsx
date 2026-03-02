@@ -42,6 +42,7 @@ const Attendance: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' }>({ text: '', type: 'info' });
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showSelectActivityModal, setShowSelectActivityModal] = useState(false);
   const [showSelectCircleModal, setShowSelectCircleModal] = useState(false);
@@ -138,6 +139,7 @@ const Attendance: React.FC = () => {
   };
 
   const handleCreateAttendee = async (data: { firstName: string; lastName: string; email: string; phone?: string }) => {
+    setIsCreating(true);
     try {
       const newAttendeeTemp = await apiService.addAttendee(data.firstName, data.lastName, data.email, data.phone);
       const newAttendee = UtilService.processUser([newAttendeeTemp])[0];
@@ -149,8 +151,12 @@ const Attendance: React.FC = () => {
       setSelectedAttendees(prev => [...prev, newAttendee]);
       setShowCreateModal(false);
       showMessage('Attendee created successfully', 'success');
+
     } catch (error) {
       showMessage('Failed to create attendee', 'error');
+      throw error;
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -508,7 +514,7 @@ const Attendance: React.FC = () => {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSubmit={handleCreateAttendee}
-        loading={isLoading}
+        loading={isCreating}
       />
 
       {/* Preview Modal */}

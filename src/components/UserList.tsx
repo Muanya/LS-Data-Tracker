@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, UserPlus, Filter, Check, X, Users, Calendar } from 'lucide-react';
+import { Search, UserPlus, Filter, Check, X, Users, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { User } from '../utils/types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
@@ -17,7 +17,7 @@ interface UserListProps {
 }
 
 export const UserList: React.FC<UserListProps> = ({
-  users: users,
+  users,
   selectedAttendees,
   onSelect,
   onDeselect,
@@ -26,8 +26,19 @@ export const UserList: React.FC<UserListProps> = ({
   onSearchChange,
   isLoading = false,
 }) => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filterActive, setFilterActive] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Reset to first page when search query changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, users.length]);
+
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedUsers = users.slice(startIndex, startIndex + itemsPerPage);
 
   const isSelected = (attendeeId: string) => {
     return selectedAttendees.some(a => a.id === attendeeId);
@@ -71,8 +82,8 @@ export const UserList: React.FC<UserListProps> = ({
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'grid'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-primary-600'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-600 hover:text-primary-600'
                 }`}
             >
               <div className="w-5 h-5 grid grid-cols-2 gap-0.5">
@@ -84,8 +95,8 @@ export const UserList: React.FC<UserListProps> = ({
             <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-colors ${viewMode === 'list'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-primary-600'
+                ? 'bg-white text-primary-600 shadow-sm'
+                : 'text-gray-600 hover:text-primary-600'
                 }`}
             >
               <div className="w-5 h-5 flex flex-col justify-between">
@@ -112,8 +123,8 @@ export const UserList: React.FC<UserListProps> = ({
         <button
           onClick={() => setFilterActive(!filterActive)}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${filterActive
-              ? 'bg-primary-50 text-primary-700 border border-primary-200'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-primary-50 text-primary-700 border border-primary-200'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
         >
           <Filter className="w-4 h-4" />
@@ -164,7 +175,7 @@ export const UserList: React.FC<UserListProps> = ({
         </Card>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {users.map((attendee) => {
+          {paginatedUsers.map((attendee) => {
             const selected = isSelected(attendee.id);
             return (
               <Card
@@ -246,7 +257,7 @@ export const UserList: React.FC<UserListProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {users.map((attendee) => {
+                {paginatedUsers.map((attendee) => {
                   const selected = isSelected(attendee.id);
                   return (
                     <tr
@@ -308,6 +319,78 @@ export const UserList: React.FC<UserListProps> = ({
             </table>
           </div>
         </Card>
+      )}
+
+      {/* Pagination Controls */}
+      {users.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t border-gray-100">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <span>Showing</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            >
+              {[10, 20, 50, 100].map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+            <span>results per page</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-600">
+              Page <span className="font-semibold text-gray-900">{currentPage}</span> of <span className="font-semibold text-gray-900">{totalPages}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center gap-1">
+                {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-10 h-10 rounded-xl font-medium transition-all duration-200 flex items-center justify-center ${currentPage === pageNum
+                        ? 'bg-primary-600 text-white shadow-lg'
+                        : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

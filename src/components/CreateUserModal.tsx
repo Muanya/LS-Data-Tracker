@@ -6,7 +6,7 @@ import { Button } from './ui/Button';
 interface CreateUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { firstName: string; lastName: string; email: string; phone?: string }) => void;
+  onSubmit: (data: { firstName: string; lastName: string; email: string; phone?: string }) => void | Promise<void>;
   loading?: boolean;
 }
 
@@ -23,9 +23,9 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
     phone: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    await onSubmit(formData);
     setFormData({ firstName: '', lastName: '', email: '', phone: '' });
   };
 
@@ -37,7 +37,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
         {/* Backdrop */}
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-          onClick={onClose}
+          onClick={() => !loading && onClose()}
         />
 
         {/* Modal */}
@@ -56,7 +56,8 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                disabled={loading}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -134,6 +135,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({
                   type="button"
                   variant="ghost"
                   onClick={onClose}
+                  disabled={loading}
                   fullWidth
                 >
                   Cancel
