@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
-import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse, ApiResponse, DashboardData } from '../utils/types';
+import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse, ApiResponse, DashboardData, QuarterReportData, QuarterReportApiResponse } from '../utils/types';
 import { environment } from '../environment';
 
 const API_URL = environment.BASE_API_URL;
@@ -248,6 +248,21 @@ class ApiService {
         } catch (error) {
             console.warn('Health check failed:', error instanceof Error ? error.message : 'Unknown error');
             return false;
+        }
+    }
+
+    // Quarter Report Methods
+    async getQuarterReport(quarter: string, year: number, centre: string): Promise<QuarterReportData> {
+        try {
+            const result: QuarterReportApiResponse = (await this.client.get('', { 
+                params: { action: 'getQuarterReport', quarter, year: String(year), centre } 
+            })).data;
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to fetch quarter report');
+            }
+            return result.data;
+        } catch (error) {
+            throw new Error(`Failed to get quarter report: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
 import Attendance from './pages/Attendance'
 import Dashboard from './pages/Dashboard'
+import Report from './pages/Report'
+import QuarterReport from './pages/QuarterReport'
 import Auth from './pages/Auth'
 import ProtectedRoute from './utils/ProtectedRoute'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -30,6 +32,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Attendance />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/report" 
+              element={
+                <ProtectedRoute>
+                  <Report />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/quarter-report" 
+              element={
+                <ProtectedRoute>
+                  <QuarterReport />
                 </ProtectedRoute>
               } 
             />
