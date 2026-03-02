@@ -1,13 +1,27 @@
 @import "tailwindcss";
 
 @theme {
+  --color-primary-100: #dbeafe;
   --color-primary-500: #3b82f6;
   --color-primary-600: #2563eb;
   --color-primary-700: #1d4ed8;
 
+  --color-secondary-100: #f3e8ff;
   --color-secondary-500: #a855f7;
   --color-secondary-600: #9333ea;
   --color-secondary-700: #7e22ce;
+
+  --color-success-100: #dcfce7;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+
+  --color-warning-100: #fef3c7;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+
+  --color-error-100: #fee2e2;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
 }
 
 :root {
@@ -55,7 +69,7 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #f9f9f9;
+  /* background-color: #f9f9f9; */
   cursor: pointer;
   transition: border-color 0.25s;
 }
