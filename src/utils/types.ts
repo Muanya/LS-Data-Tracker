@@ -167,3 +167,77 @@ export interface AddAttendanceRequest {
 
 export type ViewType = 'record' | 'summary';
 export type SummaryViewType = 'activity' | 'attendee';
+
+// Report-specific types
+export type ActivityName = "Med" | "Retreat" | "Recollection" | "Circle";
+export type FilterMode = "single" | "range";
+export type TabName = "records" | "stats";
+
+export interface AttendeeRow {
+    id: string | number;
+    attendeeId: string;
+    attendeeName: string;
+    date: string;
+    groupId?: string;
+    groupName?: string;
+}
+
+export interface ReportFilters {
+    mode: FilterMode;
+    singleDate: string;
+    dateFrom: string;
+    dateTo: string;
+    group: string;
+}
+
+export interface ReportApiResponse {
+    rows: AttendeeRow[];
+    groups?: string[];
+    error?: string;
+}
+
+// Quarter Report Types
+export type Quarter = "Q1" | "Q2" | "Q3" | "Q4";
+
+export interface MonthStats {
+    month: string;
+    personsInWork: number;
+    boysInContact: number;
+    boysGoingToSD: number;
+    boysDoctrineAvg: number;
+    catechismBreakdown: string;
+    numCircles: number;
+    boysAttendingCircles: number;
+    numProfClasses: number;
+    boysAttendingProfClasses: number;
+    boysVisitedPoor: number;
+    boysTeachingCatechism: number;
+    numMeditations: number;
+    boysAttendingMeditationsAvg: number;
+    numMonthlyRetreats: number;
+    boysMonthlyRetreats: number;
+    numLongRetreats: number;
+    boysLongRetreats: number;
+    boysAttendedCV: number;
+    totalSRBoys: number;
+}
+
+export interface QuarterReportData {
+    centre: string;
+    quarter: Quarter;
+    year: number;
+    months: MonthStats[];
+}
+
+export interface QuarterReportFilters {
+    centre: string;
+    quarter: Quarter;
+    year: number;
+}
+
+export interface QuarterReportApiResponse {
+    success: boolean;
+    data: QuarterReportData;
+    error?: string;
+    message?: string;
+}

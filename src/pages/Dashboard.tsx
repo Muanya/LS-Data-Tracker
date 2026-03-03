@@ -22,6 +22,10 @@ const Dashboard: React.FC = () => {
         navigate('/attendance');
     };
 
+    const handleViewReports = () => {
+        navigate('/report');
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gray-50">
@@ -67,6 +71,10 @@ const Dashboard: React.FC = () => {
 
                     <Button variant='primary' onClick={handleTakeAttendance}>
                         Add Attendance
+                    </Button>
+
+                    <Button variant='secondary' onClick={handleViewReports}>
+                        View Reports
                     </Button>
 
                     <button
