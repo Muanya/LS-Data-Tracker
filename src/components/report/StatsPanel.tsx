@@ -139,7 +139,7 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                                     return (
                                         <tr key={d} className={i % 2 === 0 ? "bg-transparent" : "bg-gray-50"}>
                                             <td className="px-4 py-2.5 border-b border-gray-100">
-                                                {new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                {new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric"})}
                                             </td>
                                             <td className="px-4 py-2.5 border-b border-gray-100 font-bold text-gray-900">{c}</td>
                                             <td className="px-4 py-2.5 border-b border-gray-100 text-gray-600">{pct}%</td>

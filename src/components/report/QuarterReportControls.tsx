@@ -90,31 +90,6 @@ export const QuarterReportControls: React.FC<QuarterReportControlsProps> = ({
                     </div>
                 </div>
 
-                {/* Data source toggle */}
-                <div className="flex flex-col w-full lg:w-auto">
-                    <label className="text-xs font-bold text-gray-600 tracking-widest uppercase mb-2 block">
-                        Data Source
-                    </label>
-                    <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
-                        {[["Mock", true], ["Live", false]].map(([label, val]) => (
-                            <button 
-                                key={String(label)} 
-                                onClick={() => handleFilterChange('useMock', val as boolean)} 
-                                className={`flex-1 px-2 sm:px-3.5 py-2.5 border-none font-bold text-xs cursor-pointer font-inherit transition-all duration-200 ${
-                                    filters.useMock === val 
-                                        ? "bg-purple-600 text-white" 
-                                        : "bg-transparent text-gray-600 hover:bg-gray-50"
-                                }`}
-                                style={{
-                                    borderRight: val ? "1px solid #e5e7eb" : "none",
-                                }}
-                            >
-                                {label as string}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
                 <Button
                     onClick={onGenerate}
                     disabled={loading}

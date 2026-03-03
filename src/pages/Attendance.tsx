@@ -112,7 +112,7 @@ const Attendance: React.FC = () => {
       attendee.firstName.toLowerCase().includes(query) ||
       attendee.lastName.toLowerCase().includes(query) ||
       attendee.email?.toLowerCase().includes(query) ||
-      attendee.phone?.includes(query)
+      attendee.phone?.toString().includes(query)
     );
   }, [attendees, searchQuery]);
 

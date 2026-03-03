@@ -1,49 +1,10 @@
 import { useState, useCallback, useRef } from 'react';
-import { QuarterReportHeader } from '../components/report/QuarterReportHeader';
+import Header from '../components/Header';
 import { QuarterReportControls } from '../components/report/QuarterReportControls';
 import { QuarterReportTable } from '../components/report/QuarterReportTable';
 import { Card } from '../components/ui/Card';
 import apiService from '../services/apiService';
 import type { QuarterReportData, QuarterReportFilters, Quarter, MonthStats } from '../utils/types';
-
-// Mock data function for preview when no API is available
-function mockData(quarter: Quarter, year: number): QuarterReportData {
-    const QUARTER_MONTHS: Record<Quarter, [string, string, string]> = {
-        Q1: ["January",   "February",  "March"],
-        Q2: ["April",     "May",       "June"],
-        Q3: ["July",      "August",    "September"],
-        Q4: ["October",   "November",  "December"],
-    };
-
-    const months = QUARTER_MONTHS[quarter];
-    return {
-        centre: "LAKESIDE SR",
-        quarter,
-        year,
-        months: months.map((month, i) => ({
-            month,
-            personsInWork:               17,
-            boysInContact:               126,
-            boysGoingToSD:               0,
-            boysDoctrineAvg:             [4, 5, 3][i],
-            catechismBreakdown:          "Lakeside – 3\nKC – 25\nFSTC – 10",
-            numCircles:                  4,
-            boysAttendingCircles:        [12, 12, 13][i],
-            numProfClasses:              [0, 0, 1][i],
-            boysAttendingProfClasses:    [0, 0, 1][i],
-            boysVisitedPoor:             0,
-            boysTeachingCatechism:       0,
-            numMeditations:              0,
-            boysAttendingMeditationsAvg: 0,
-            numMonthlyRetreats:          1,
-            boysMonthlyRetreats:         [10, 9, 15][i],
-            numLongRetreats:             [0, 1, 1][i],
-            boysLongRetreats:            [0, 1, 6][i],
-            boysAttendedCV:              [0, 2, 0][i],
-            totalSRBoys:                 24,
-        })),
-    };
-}
 
 // Print styles for export
 const PRINT_STYLES = `
@@ -64,24 +25,19 @@ const PRINT_STYLES = `
 export default function QuarterReport() {
     const [filters, setFilters] = useState<QuarterReportFilters>({
         centre: "LAKESIDE SR",
-        quarter: "Q4",
-        year: 2024,
-        useMock: true,
+        quarter: "Q1",
+        year: 2026,
     });
     
-    const [data, setData] = useState<QuarterReportData | null>(mockData("Q4", 2024));
+    const [data, setData] = useState<QuarterReportData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [editedData, setEditedData] = useState<QuarterReportData | null>(null);
 
     const printRef = useRef<HTMLDivElement>(null);
 
     // Fetch quarter report data
     const fetchReport = useCallback(async () => {
-        if (filters.useMock) {
-            setData(mockData(filters.quarter, filters.year));
-            return;
-        }
-
         setLoading(true);
         setError("");
         try {
@@ -114,7 +70,8 @@ export default function QuarterReport() {
 
     // Handle CSV export
     const handleCSV = () => {
-        if (!data) return;
+        const exportData = editedData || data;
+        if (!exportData) return;
 
         const ROWS = [
             { num: 1,  label: "Number of persons in the work of sr Apostolate",                              key: "personsInWork" as keyof MonthStats },
@@ -138,7 +95,7 @@ export default function QuarterReport() {
             { num: 19, label: "Total number of sr boys",                                                     key: "totalSRBoys" as keyof MonthStats },
         ];
 
-        const months = data.months;
+        const months = exportData.months;
         const header = ["#", "Metric", ...months.map(m => m.month)].join(",");
         const rows = ROWS.map(row => {
             const vals = months.map(m => {
@@ -153,14 +110,43 @@ export default function QuarterReport() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `${data.centre.replace(/\s/g, "_")}_${data.quarter}_${data.year}.csv`;
+        a.download = `${exportData.centre.replace(/\s/g, "_")}_${exportData.quarter}_${exportData.year}.csv`;
         a.click();
         URL.revokeObjectURL(url);
+    };
+
+    // Callback to receive edited data from table
+    const handleDataChange = (newData: QuarterReportData) => {
+        setEditedData(newData);
     };
 
     return (
         <div className="min-h-screen bg-gray-50 font-['Outfit',_sans-serif] text-gray-900">
             <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Crimson+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+            {/* Header */}
+            <Header 
+                title="Quarter Report"
+                subtitle="Form E6 Generator"
+            >
+                {/* Export buttons - only show when data exists */}
+                {data && (
+                    <div className="flex gap-2 sm:gap-3">
+                        <button
+                            onClick={handleCSV}
+                            className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-green-600/40 bg-green-50 text-green-700 font-bold text-xs sm:text-sm cursor-pointer font-inherit transition-all duration-200 hover:bg-green-100 hover:border-green-600/60 whitespace-nowrap"
+                        >
+                            ⬇ Export CSV
+                        </button>
+                        <button
+                            onClick={handlePrint}
+                            className="px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-blue-600/40 bg-blue-50 text-blue-700 font-bold text-xs sm:text-sm cursor-pointer font-inherit transition-all duration-200 hover:bg-blue-100 hover:border-blue-600/60 whitespace-nowrap"
+                        >
+                            🖨 Print / PDF
+                        </button>
+                    </div>
+                )}
+            </Header>
 
             {/* Ambient glow */}
             <div 
@@ -171,13 +157,6 @@ export default function QuarterReport() {
             />
 
             <div className="relative z-10">
-                {/* Header */}
-                <QuarterReportHeader 
-                    data={data} 
-                    onExportCSV={handleCSV} 
-                    onPrint={handlePrint} 
-                />
-
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-4 sm:gap-6">
                     {/* Controls */}
                     <QuarterReportControls
@@ -215,7 +194,7 @@ export default function QuarterReport() {
 
                             {/* Printable area */}
                             <div id="report-print-area" ref={printRef} className="p-4 sm:p-7">
-                                <QuarterReportTable data={data} />
+                                <QuarterReportTable data={data} onDataChange={handleDataChange} />
                             </div>
                         </Card>
                     )}

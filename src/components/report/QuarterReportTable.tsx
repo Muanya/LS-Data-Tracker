@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { QuarterReportData, MonthStats, Quarter } from '../../utils/types';
 
 interface QuarterReportTableProps {
     data: QuarterReportData;
     printMode?: boolean;
+    onDataChange?: (data: QuarterReportData) => void;
 }
 
 const QUARTER_LABELS: Record<Quarter, string> = {
@@ -39,15 +40,11 @@ const ROWS: RowDef[] = [
     { num: 19, label: "Total number of sr boys",                                                     key: "totalSRBoys" },
 ];
 
-export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, printMode = false }) => {
-    const months = data.months;
+export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, printMode = false, onDataChange }) => {
+    const [editedData, setEditedData] = useState<QuarterReportData>(data);
+    const [editingCell, setEditingCell] = useState<string | null>(null);
 
-    const cellVal = (m: MonthStats, key: keyof MonthStats): string => {
-        const v = m[key];
-        if (key === "catechismBreakdown") return String(v);
-        if (v === 0 || v === "") return "0";
-        return String(v);
-    };
+    const months = editedData.months;
 
     const isMultiline = (key: keyof MonthStats) => key === "catechismBreakdown";
 
@@ -68,6 +65,54 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
         textAlign: "center", letterSpacing: "0.06em",
     };
     const tdBase: React.CSSProperties = { padding: "10px 8px", verticalAlign: "middle" };
+
+    const getCellId = (monthIndex: number, key: keyof MonthStats) => `${monthIndex}-${key}`;
+
+    const handleCellClick = (monthIndex: number, key: keyof MonthStats) => {
+        if (printMode) return;
+        setEditingCell(getCellId(monthIndex, key));
+    };
+
+    const handleCellChange = (monthIndex: number, key: keyof MonthStats, value: string) => {
+        const newMonths = [...editedData.months];
+        const currentValue = newMonths[monthIndex][key];
+        
+        // Handle different data types
+        let parsedValue: any = value;
+        if (typeof currentValue === 'number') {
+            parsedValue = parseFloat(value) || 0;
+        }
+        
+        newMonths[monthIndex] = {
+            ...newMonths[monthIndex],
+            [key]: parsedValue
+        };
+        
+        const newEditedData = {
+            ...editedData,
+            months: newMonths
+        };
+        
+        setEditedData(newEditedData);
+        if (onDataChange) {
+            onDataChange(newEditedData);
+        }
+    };
+
+    const handleCellBlur = () => {
+        setEditingCell(null);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            setEditingCell(null);
+        }
+    };
+
+    const cellVal = (m: MonthStats, key: keyof MonthStats) => {
+        const monthIndex = months.indexOf(m);
+        return editedData.months[monthIndex][key];
+    };
 
     return (
         <div style={{
@@ -159,24 +204,58 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
                                         paddingLeft: 12,
                                     }}>{row.label}</td>
 
-                                    {months.map(m => {
+                                    {months.map((m, monthIndex) => {
                                         const val = cellVal(m, row.key);
+                                        const cellId = getCellId(monthIndex, row.key);
+                                        const isEditing = editingCell === cellId;
+                                        const isMulti = isMultiline(row.key);
+                                        
                                         return (
-                                            <td key={m.month} style={{
-                                                ...tdBase,
-                                                border: cellBdr,
-                                                textAlign: isMulti ? "left" : "center",
-                                                color: valueClr,
-                                                fontWeight: isMulti ? 400 : 700,
-                                                fontFamily: isMulti
-                                                    ? "inherit"
-                                                    : (printMode ? "Arial" : "'JetBrains Mono', monospace"),
-                                                fontSize: isMulti ? (printMode ? 10 : 12) : (printMode ? 11 : 13),
-                                                whiteSpace: isMulti ? "pre-line" : "nowrap",
-                                                lineHeight: isMulti ? 1.8 : 1,
-                                                paddingLeft: isMulti ? 8 : 0,
-                                            }}>
-                                                {val}
+                                            <td 
+                                                key={m.month} 
+                                                style={{
+                                                    ...tdBase,
+                                                    border: cellBdr,
+                                                    textAlign: isMulti ? "left" : "center",
+                                                    color: valueClr,
+                                                    fontWeight: isMulti ? 400 : 700,
+                                                    fontFamily: isMulti
+                                                        ? "inherit"
+                                                        : (printMode ? "Arial" : "'JetBrains Mono', monospace"),
+                                                    fontSize: isMulti ? (printMode ? 10 : 12) : (printMode ? 11 : 13),
+                                                    whiteSpace: isMulti ? "pre-line" : "nowrap",
+                                                    lineHeight: isMulti ? 1.8 : 1,
+                                                    paddingLeft: isMulti ? 8 : 0,
+                                                    cursor: printMode ? 'default' : 'pointer',
+                                                    backgroundColor: isEditing ? '#334155' : 'transparent',
+                                                }}
+                                                onClick={() => handleCellClick(monthIndex, row.key)}
+                                            >
+                                                {isEditing && !printMode ? (
+                                                    <input
+                                                        type={row.isText ? "text" : "number"}
+                                                        value={val}
+                                                        onChange={(e) => handleCellChange(monthIndex, row.key, e.target.value)}
+                                                        onBlur={handleCellBlur}
+                                                        onKeyDown={handleKeyDown}
+                                                        autoFocus
+                                                        style={{
+                                                            background: 'transparent',
+                                                            border: 'none',
+                                                            color: '#ffffff',
+                                                            fontFamily: 'inherit',
+                                                            fontSize: 'inherit',
+                                                            fontWeight: 'inherit',
+                                                            textAlign: isMulti ? 'left' : 'center',
+                                                            width: '100%',
+                                                            outline: 'none',
+                                                            padding: 0,
+                                                            margin: 0,
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <span>{val}</span>
+                                                )}
                                             </td>
                                         );
                                     })}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
 import FilterBar from '../components/report/FilterBar';
 import AttendeeTable from '../components/report/AttendeeTable';
 import StatsPanel from '../components/report/StatsPanel';
@@ -100,6 +101,21 @@ export default function Report() {
         <div className="min-h-screen bg-gray-50 font-['Outfit',_sans-serif] text-gray-900">
             <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
+            {/* Header */}
+            <Header 
+                title="Activity Dashboard"
+                subtitle="Attendance Management System"
+            >
+                {/* Navigation Button */}
+                <Button
+                    onClick={() => navigate('/quarter-report')}
+                    variant="secondary"
+                    className="px-4 py-2 text-sm"
+                >
+                    📊 Quarter Report
+                </Button>
+            </Header>
+
             {/* Ambient glow */}
             <div 
                 className="fixed inset-0 pointer-events-none z-0 transition-all duration-500"
@@ -109,40 +125,6 @@ export default function Report() {
             />
 
             <div className="relative z-1">
-                {/* Header */}
-                <header className="border-b border-gray-200 bg-white/80 backdrop-blur-3xl sticky top-0 z-100">
-                    <div className="px-10 py-5 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <div 
-                                className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg"
-                                style={{
-                                    background: `linear-gradient(135deg, ${accent}, ${accent}80)`,
-                                    boxShadow: `0 0 20px ${accent}60`,
-                                }}
-                            >
-                                {ACTIVITY_ICON[activity]}
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold text-gray-600 tracking-widest uppercase">
-                                    Attendance Management System
-                                </div>
-                                <div className="text-xl font-extrabold text-gray-900 tracking-tight">
-                                    Activity Dashboard
-                                </div>
-                            </div>
-                        </div>
-                        
-                        {/* Navigation Button */}
-                        <Button
-                            onClick={() => navigate('/quarter-report')}
-                            variant="secondary"
-                            className="px-4 py-2 text-sm"
-                        >
-                            📊 Quarter Report
-                        </Button>
-                    </div>
-                </header>
-
                 <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6">
 
                     {/* Activity selector */}
@@ -156,47 +138,43 @@ export default function Report() {
                                     onClick={() => switchActivity(a)} 
                                     className={`px-5 py-2.5 rounded-xl border font-bold text-sm cursor-pointer font-inherit flex items-center gap-2 transition-all duration-200 ${
                                         active 
-                                            ? `border-[${ac}] bg-[${ac}]/20 text-[${ac}] shadow-lg` 
-                                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                                            ? "border-transparent bg-gradient-to-r from-accent-start to-accent-end text-white shadow-lg" 
+                                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
                                     }`}
                                     style={{
-                                        borderColor: active ? ac : "#e5e7eb",
-                                        background: active ? `${ac}20` : "#ffffff",
-                                        color: active ? ac : "#4b5563",
-                                        boxShadow: active ? `0 0 16px ${ac}30` : "none",
+                                        ...(active && {
+                                            background: `linear-gradient(135deg, ${ac}, ${ac}80)`,
+                                            boxShadow: `0 0 20px ${ac}60`,
+                                        }),
                                     }}
                                 >
-                                    <span>{ACTIVITY_ICON[a]}</span> {a}
+                                    <span className="text-base">{ACTIVITY_ICON[a]}</span>
+                                    {a}
                                 </button>
                             );
                         })}
                     </div>
 
-                    {/* Filter panel */}
-                    <Card>
-                        <div className="flex flex-wrap justify-between items-end gap-4">
-                            <FilterBar
-                                isCircle={isCircle}
-                                filters={filters}
-                                onChange={setFilters}
-                                groups={groups}
-                                accent={accent}
-                            />
-                            <Button
-                                onClick={fetchData}
-                                disabled={loading}
-                                loading={loading}
-                                className="px-8 py-2.5 font-extrabold tracking-wide"
-                                style={{
-                                    background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-                                    color: "#ffffff",
-                                    boxShadow: `0 4px 20px ${accent}50`,
-                                }}
-                            >
-                                {loading ? "Loading..." : "🔍 Fetch Records"}
-                            </Button>
-                        </div>
-                    </Card>
+                    {/* Filters */}
+                    <FilterBar
+                        filters={filters}
+                        onChange={setFilters}
+                        isCircle={isCircle}
+                        groups={groups}
+                        accent={accent}
+                    />
+
+                    {/* Generate Button */}
+                    <div className="flex justify-end">
+                        <Button
+                            onClick={fetchData}
+                            disabled={loading}
+                            loading={loading}
+                            className="px-7 py-2.5 font-extrabold tracking-wide bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg hover:shadow-xl active:scale-95"
+                        >
+                            {loading ? "Loading..." : "🔍 Fetch Data"}
+                        </Button>
+                    </div>
 
                     {/* Error */}
                     {error && (
@@ -205,39 +183,35 @@ export default function Report() {
                         </div>
                     )}
 
-                    {/* Results */}
-                    {rows.length > 0 && (
-                        <>
-                            {/* Tab switcher */}
-                            <div className="inline-flex rounded-xl overflow-hidden border border-gray-200 bg-white">
-                                {(["records", "stats"] as TabName[]).map(t => (
-                                    <button 
-                                        key={t} 
-                                        onClick={() => setTab(t)} 
-                                        className={`px-6 py-2.5 border-none font-bold text-sm cursor-pointer font-inherit transition-all duration-150 ${
-                                            tab === t 
-                                                ? `bg-[${accent}]/25 text-[${accent}]` 
-                                                : "bg-transparent text-gray-600"
-                                        }`}
-                                        style={{
-                                            background: tab === t ? `${accent}25` : "transparent",
-                                            color: tab === t ? accent : "#4b5563",
-                                            borderRight: t === "records" ? "1.5px solid #e5e7eb" : "none",
-                                        }}
-                                    >
-                                        {t === "records" ? "📋 Records" : "📊 Statistics"}
-                                    </button>
-                                ))}
-                            </div>
+                    {/* Tabs */}
+                    <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit">
+                        {(["records", "stats"] as TabName[]).map(t => (
+                            <button
+                                key={t}
+                                onClick={() => setTab(t)}
+                                className={`px-6 py-2.5 border-none font-bold text-sm cursor-pointer font-inherit transition-all duration-150 ${
+                                    tab === t 
+                                        ? `bg-[${accent}]/25 text-[${accent}]` 
+                                        : "bg-transparent text-gray-600"
+                                }`}
+                                style={{
+                                    background: tab === t ? `${accent}25` : "transparent",
+                                    color: tab === t ? accent : "#4b5563",
+                                    borderRight: t === "records" ? "1.5px solid #e5e7eb" : "none",
+                                }}
+                            >
+                                {t === "records" ? "📋 Records" : "📊 Statistics"}
+                            </button>
+                        ))}
+                    </div>
 
-                            <Card>
-                                {tab === "records"
-                                    ? <AttendeeTable rows={rows} isCircle={isCircle} accent={accent} />
-                                    : <StatsPanel rows={rows} allData={allData} isCircle={isCircle} accent={accent} />
-                                }
-                            </Card>
-                        </>
-                    )}
+                    <Card>
+                        {tab === "records" ? (
+                            <AttendeeTable rows={rows} isCircle={isCircle} accent={accent} />
+                        ) : (
+                            <StatsPanel rows={rows} allData={allData} isCircle={isCircle} accent={accent} />
+                        )}
+                    </Card>
 
                     {/* Empty state */}
                     {!rows.length && !loading && !error && (

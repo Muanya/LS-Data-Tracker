@@ -233,7 +233,6 @@ export interface QuarterReportFilters {
     centre: string;
     quarter: Quarter;
     year: number;
-    useMock: boolean;
 }
 
 export interface QuarterReportApiResponse {
