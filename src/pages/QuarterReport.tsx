@@ -4,7 +4,7 @@ import { QuarterReportControls } from '../components/report/QuarterReportControl
 import { QuarterReportTable } from '../components/report/QuarterReportTable';
 import { Card } from '../components/ui/Card';
 import apiService from '../services/apiService';
-import type { QuarterReportData, QuarterReportFilters, Quarter, MonthStats } from '../utils/types';
+import type { QuarterReportData, QuarterReportFilters, MonthStats } from '../utils/types';
 
 // Print styles for export
 const PRINT_STYLES = `

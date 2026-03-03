@@ -50,7 +50,7 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
 
     const tblBorder = printMode ? "1px solid #333" : "1.5px solid #334155";
     const headerBg  = printMode ? "#f0f0f0" : "#1e293b";
-    const headerClr = printMode ? "#1a1a1a" : "#1a1a1a";
+    const headerClr = printMode ? "#1a1a1a" : "#f8f8f8";
     const rowEven   = printMode ? "#ffffff" : "rgba(255,255,255,0.01)";
     const rowOdd    = printMode ? "#f8f8f8" : "rgba(255,255,255,0.04)";
     const cellBdr   = printMode ? "1px solid #ccc" : "1px solid rgba(255,255,255,0.07)";
@@ -155,7 +155,7 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
                                 border: cellBdr,
                                 width: "6%",
                                 fontSize: printMode ? 10 : 11,
-                            }}></th>
+                            }}>S/N</th>
                             <th style={{
                                 ...thBase,
                                 background: headerBg,
@@ -183,7 +183,7 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
                     <tbody>
                         {ROWS.map((row, idx) => {
                             const bg = idx % 2 === 0 ? rowEven : rowOdd;
-                            const isMulti = isMultiline(row.key);
+                            // const isMulti = isMultiline(row.key);
                             return (
                                 <tr key={row.num} style={{ background: bg }}>
                                     <td style={{
