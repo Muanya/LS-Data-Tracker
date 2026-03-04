@@ -56,10 +56,29 @@ export interface DateRange {
 export interface Activity {
     id: string;
     name: string;
-    frequency: string;
-    icon: React.ReactNode;
+    displayName: string;
+    category: string;
+    frequency: 'Daily' | 'Weekly' | 'Monthly' | 'Yearly' | 'Quarterly';
+    type: 'simple' | 'grouped' | 'complex';
+    icon: string;
     color: string;
     gradient: string;
+    dataType: 'number' | 'text' | 'boolean' | 'array' | 'grouped';
+    reportKey: string;
+    displayOrder: number;
+    requiresGroup?: boolean;
+    groupType?: 'circle' | 'class' | 'retreat' | 'section';
+    allowMultipleGroups?: boolean;
+    includeInQuarterReport: boolean;
+    includeInAttendanceTracking: boolean;
+    aggregationMethod?: 'sum' | 'average' | 'count' | 'max';
+    required?: boolean;
+    min?: number;
+    max?: number;
+    validation?: {
+        pattern?: string;
+        message?: string;
+    };
 }
 
 export interface BulkAttendanceResponse {
@@ -96,7 +115,10 @@ export interface ActivityStats {
     uniqueAttendees: number;
 }
 
-export interface DashboardActivity extends Activity {
+export interface DashboardActivity {
+    id: string;
+    name: string;
+    color: string;
     stats: ActivityStats;
 }
 
@@ -133,17 +155,37 @@ export interface CrossActivityData {
     crossActivityRate: string;
 }
 
-export interface DashboardData {
-    summary: SummaryMetrics;
-    activities: DashboardActivity[];
+export interface SessionTrends {
     trends: {
         labels: string[];
         datasets: Array<{
             label: string;
             data: number[];
             borderColor: string;
+            backgroundColor: string;
+            sessions: number;
+            totalAttendance: number;
+            averageAttendance: number;
         }>;
     };
+    summary: {
+        totalSessions: number;
+        totalAttendance: number;
+        averageSessionAttendance: number;
+        mostRecentSession?: {
+            activity: string;
+            date: string;
+            attendees: Set<string>;
+            timestamp: string;
+        };
+        sessionGrowth: 'Growing' | 'Declining' | 'Stable' | 'Insufficient data';
+    };
+}
+
+export interface DashboardData {
+    summary: SummaryMetrics;
+    activities: DashboardActivity[];
+    trends: SessionTrends;
     crossActivity: CrossActivityData;
     lastUpdated: string;
 }
@@ -205,6 +247,7 @@ export interface MonthStats {
     boysInContact: number;
     boysGoingToSD: number;
     boysDoctrineAvg: number;
+    numDoctrineCls: number;
     catechismBreakdown: string;
     numCircles: number;
     boysAttendingCircles: number;
@@ -220,6 +263,12 @@ export interface MonthStats {
     boysLongRetreats: number;
     boysAttendedCV: number;
     totalSRBoys: number;
+    // New fields from backend
+    numEucharisticVigils: number;
+    numSpiritualDirection: number;
+    numVisitsToThePoor: number;
+    numProfessionalGetTogethers: number;
+    numWorkshops: number;
 }
 
 export interface QuarterReportData {
@@ -235,9 +284,67 @@ export interface QuarterReportFilters {
     year: number;
 }
 
+export interface ActivityConfigResponse {
+    activities: Activity[];
+    categories: Array<{
+        id: string;
+        name: string;
+        displayOrder: number;
+    }>;
+    lastUpdated: string;
+}
+
+export interface ActivityGroup {
+    id: string;
+    name: string;
+    activityId: string;
+    activityType: string;
+    description?: string;
+    capacity?: number;
+    isActive: boolean;
+    metadata?: Record<string, any>;
+}
+
+export interface ActivityGroupResponse {
+    groups: ActivityGroup[];
+    activityId: string;
+    totalCount: number;
+    activeCount: number;
+}
+
+export interface GroupedActivityData {
+    total: number;
+    groups: Array<{
+        groupId: string;
+        groupName: string;
+        count: number;
+        average?: number;
+        trend?: 'up' | 'down' | 'stable';
+    }>;
+    metadata?: Record<string, any>;
+}
+
+// Backend-driven field configuration
+export interface QuarterReportFieldConfig {
+    key: string;
+    label: string;
+    dataType: 'number' | 'text' | 'boolean';
+    isVisibleByDefault: boolean;
+    displayOrder: number;
+    description?: string;
+}
+
+export interface QuarterReportBackendConfig {
+    fields: QuarterReportFieldConfig[];
+  
+    version: string;
+    lastUpdated: string;
+}
+
 export interface QuarterReportApiResponse {
     success: boolean;
     data: QuarterReportData;
+    config?: QuarterReportBackendConfig;
     error?: string;
     message?: string;
 }

@@ -24,6 +24,8 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
     uniqueAttendees: activity.stats.uniqueAttendees,
   };
 
+  console.log(activity, activity.name);
+
   return (
     <div
       className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 hover:shadow-lg transition-all duration-200 border-l-4"
@@ -33,7 +35,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
         <div className="flex-1 min-w-0">
           <h3 className="text-base sm:text-xl font-semibold text-gray-800 truncate">{activity.name}</h3>
           {activity.name && (
-            <p className="text-gray-600 text-xs sm:text-sm mt-0.5 line-clamp-1">{activity.name}</p>
+            <p className="text-gray-600 text-xs sm:text-sm mt-0.5 line-clamp-1"> {activity.name}</p>
           )}
         </div>
         <div

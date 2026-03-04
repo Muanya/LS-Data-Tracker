@@ -4,21 +4,16 @@ import Header from '../components/Header';
 import FilterBar from '../components/report/FilterBar';
 import AttendeeTable from '../components/report/AttendeeTable';
 import StatsPanel from '../components/report/StatsPanel';
-import { ACTIVITIES, ACCENT, ACTIVITY_ICON } from '../components/report/constants';
 import apiService from '../services/apiService';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
-import type { 
-    ActivityName, 
-    ReportFilters, 
-    TabName, 
-    AttendeeRow,
-    AttendanceRecord
-} from '../utils/types';
+import type { Activity, ReportFilters, TabName, AttendeeRow, AttendanceRecord } from '../utils/types';
+import { getIcon } from '../utils/iconMapping';
 
 export default function Report() {
     const navigate = useNavigate();
-    const [activity, setActivity] = useState<ActivityName>("Med");
+    const [activities, setActivities] = useState<Activity[]>([]);
+    const [activity, setActivity] = useState<string>("");
     const [filters, setFilters] = useState<ReportFilters>({
         mode: "single", singleDate: "", dateFrom: "", dateTo: "", group: "",
     });
@@ -28,23 +23,45 @@ export default function Report() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [tab, setTab] = useState<TabName>("records");
+    const [activitiesLoading, setActivitiesLoading] = useState(true);
 
-    const isCircle = activity === "Circle";
-    const accent = ACCENT[activity];
+    const currentActivity = activities.find(a => a.id === activity || a.name === activity);
+    const requiresGroup = currentActivity?.requiresGroup ?? false;
+    const accent = currentActivity?.color || "#818cf8";
 
-    // Fetch circle groups when switching to Circle
+    // Fetch activities from backend on mount
     useEffect(() => {
-        if (!isCircle) return;
+        const fetchActivities = async () => {
+            try {
+                const response = await apiService.getActivities();
+                setActivities(response.activities);
+                // Set first activity as default if available
+                if (response.activities.length > 0) {
+                    setActivity(response.activities[0].id);
+                }
+            } catch (error) {
+                console.error('Failed to fetch activities:', error);
+                setError('Failed to load activities');
+            } finally {
+                setActivitiesLoading(false);
+            }
+        };
+        fetchActivities();
+    }, []);
+
+    // Fetch groups when switching to an activity that requires groups
+    useEffect(() => {
+        if (!requiresGroup || !currentActivity) return;
         const fetchGroups = async () => {
             try {
-                const circleGroups = await apiService.getCircleGroups();
-                setGroups(circleGroups.map(g => g.name));
+                const activityGroups = await apiService.getActivityGroups(currentActivity.id);
+                setGroups(activityGroups.groups.map(g => g.name));
             } catch (error) {
-                console.error('Failed to fetch circle groups:', error);
+                console.error('Failed to fetch activity groups:', error);
             }
         };
         fetchGroups();
-    }, [isCircle]);
+    }, [requiresGroup, currentActivity]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -66,7 +83,7 @@ export default function Report() {
             // Filter by activity for the records table
             const filteredData = attendanceData.filter(record => 
                 record.activity === activity && 
-                (!isCircle || !filters.group || record.groupName === filters.group)
+                (!requiresGroup || !filters.group || record.groupName === filters.group)
             );
 
             // Transform to AttendeeRow format for the table
@@ -87,10 +104,10 @@ export default function Report() {
         } finally {
             setLoading(false);
         }
-    }, [activity, filters, isCircle]);
+    }, [activity, filters, requiresGroup]);
 
-    const switchActivity = (a: ActivityName) => {
-        setActivity(a);
+    const switchActivity = (activityId: string) => {
+        setActivity(activityId);
         setFilters({ mode: "single", singleDate: "", dateFrom: "", dateTo: "", group: "" });
         setRows([]);
         setError("");
@@ -128,38 +145,46 @@ export default function Report() {
                 <main className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6">
 
                     {/* Activity selector */}
-                    <div className="flex flex-wrap gap-2.5">
-                        {ACTIVITIES.map(a => {
-                            const ac = ACCENT[a];
-                            const active = activity === a;
-                            return (
-                                <button 
-                                    key={a} 
-                                    onClick={() => switchActivity(a)} 
-                                    className={`px-5 py-2.5 rounded-xl border font-bold text-sm cursor-pointer font-inherit flex items-center gap-2 transition-all duration-200 ${
-                                        active 
-                                            ? "border-transparent bg-gradient-to-r from-accent-start to-accent-end text-white shadow-lg" 
-                                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                                    }`}
-                                    style={{
-                                        ...(active && {
-                                            background: `linear-gradient(135deg, ${ac}, ${ac}80)`,
-                                            boxShadow: `0 0 20px ${ac}60`,
-                                        }),
-                                    }}
-                                >
-                                    <span className="text-base">{ACTIVITY_ICON[a]}</span>
-                                    {a}
-                                </button>
-                            );
-                        })}
-                    </div>
+                    {activitiesLoading ? (
+                        <div className="flex flex-wrap gap-2.5">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="px-5 py-2.5 rounded-xl bg-gray-200 animate-pulse w-24 h-10" />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-wrap gap-2.5">
+                            {activities.map((a: Activity) => {
+                                const ac = a.color;
+                                const active = activity === a.id;
+                                return (
+                                    <button 
+                                        key={a.id} 
+                                        onClick={() => switchActivity(a.id)} 
+                                        className={`px-5 py-2.5 rounded-xl border font-bold text-sm cursor-pointer font-inherit flex items-center gap-2 transition-all duration-200 ${
+                                            active 
+                                                ? "border-transparent bg-gradient-to-r from-accent-start to-accent-end text-white shadow-lg" 
+                                                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                                        }`}
+                                        style={{
+                                            ...(active && {
+                                                background: `linear-gradient(135deg, ${ac}, ${ac}80)`,
+                                                boxShadow: `0 0 20px ${ac}60`,
+                                            }),
+                                        }}
+                                    >
+                                        <span className="text-base">{getIcon(a.icon) || '🔵'}</span>
+                                        {a.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
 
                     {/* Filters */}
                     <FilterBar
                         filters={filters}
                         onChange={setFilters}
-                        isCircle={isCircle}
+                        isCircle={requiresGroup}
                         groups={groups}
                         accent={accent}
                     />
@@ -207,19 +232,19 @@ export default function Report() {
 
                     <Card>
                         {tab === "records" ? (
-                            <AttendeeTable rows={rows} isCircle={isCircle} accent={accent} />
+                            <AttendeeTable rows={rows} isCircle={requiresGroup} accent={accent} />
                         ) : (
-                            <StatsPanel rows={rows} allData={allData} isCircle={isCircle} accent={accent} />
+                            <StatsPanel rows={rows} allData={allData} isCircle={requiresGroup} accent={accent} />
                         )}
                     </Card>
 
                     {/* Empty state */}
                     {!rows.length && !loading && !error && (
                         <Card className="text-center py-16">
-                            <div className="text-5xl mb-4">{ACTIVITY_ICON[activity]}</div>
+                            <div className="text-5xl mb-4">{currentActivity?.icon || '🔵'}</div>
                             <div className="font-bold text-lg text-gray-700 mb-2">Select filters and fetch records</div>
                             <div className="text-sm text-gray-600">
-                                {isCircle
+                                {requiresGroup
                                     ? "Filter by date range and optionally by group"
                                     : "Filter by a specific day or a date range"
                                 }
