@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import type { Activity } from '../utils/types';
+import { getIcon } from '../utils/iconMapping';
+import { getGradientStyle } from '../utils/colorUtils';
 import { Card } from './ui/Card';
 import { CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from './ui/Button';
@@ -45,29 +47,34 @@ const ActivitySelectModal: React.FC<ActivitySelectModalProps> = ({
                             <Sparkles className="w-5 h-5 text-primary-500" />
                             Select One
                         </h3>
-                        {activities.map((activity) => (
-                            <button
-                                key={activity.id}
-                                onClick={() => handleSelectActivity(activity)}
-                                className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${selectedActivityState === activity.id
-                                    ? `border-${activity.color}-500 bg-${activity.color}-50 ring-2 ring-${activity.color}-200`
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                    }`}
-                            >
-                                <div className={`w-12 h-12 bg-gradient-to-r ${activity.gradient} rounded-xl flex items-center justify-center`}>
-                                    <div className="w-6 h-6 text-white">
-                                        {activity.icon}
+                        <div className="overflow-y-auto max-h-[60vh] space-y-3 pr-2">
+                            {activities.map((activity) => (
+                                <button
+                                    key={activity.id}
+                                    onClick={() => handleSelectActivity(activity)}
+                                    className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all duration-300 ${selectedActivityState === activity.id
+                                        ? `border-${activity.color}-500 bg-${activity.color}-50 ring-2 ring-${activity.color}-200`
+                                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    <div
+                                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                                        style={getGradientStyle(activity.color)}
+                                    >
+                                        <div className="w-6 h-6 text-white">
+                                            {getIcon(activity.icon)}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-left flex-1">
-                                    <div className="font-semibold text-gray-900">{activity.name}</div>
-                                    <div className="text-sm text-gray-500">{activity.frequency}</div>
-                                </div>
-                                {selectedActivityState === activity.id && (
-                                    <CheckCircle className="w-5 h-5 text-primary-500" />
-                                )}
-                            </button>
-                        ))}
+                                    <div className="text-left flex-1">
+                                        <div className="font-semibold text-gray-900">{activity.name}</div>
+                                        <div className="text-sm text-gray-500">{activity.frequency}</div>
+                                    </div>
+                                    {selectedActivityState === activity.id && (
+                                        <CheckCircle className="w-5 h-5 text-primary-500" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
 
                         <div className="flex flex-col sm:flex-row gap-4 pt-6 mt-6 border-t border-gray-200">
                             <Button

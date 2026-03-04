@@ -1,5 +1,5 @@
-import React from 'react';
-import { Users, TrendingUp, Link2, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Users, TrendingUp, Link2, BarChart3, X } from 'lucide-react';
 import type { CrossActivityData } from '../utils/types';
 
 interface CrossActivityAnalysisProps {
@@ -7,6 +7,7 @@ interface CrossActivityAnalysisProps {
 }
 
 const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActivity }) => {
+  const [showAllModal, setShowAllModal] = useState(false);
 
   return (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 mb-6">
@@ -52,9 +53,60 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
             ))}
           </div>
 
-          <button className="w-full mt-4 py-2 text-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium border border-gray-200 rounded-lg hover:border-gray-300 transition">
+          <button 
+            onClick={() => setShowAllModal(true)}
+            className="w-full mt-4 py-2 text-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium border border-gray-200 rounded-lg hover:border-gray-300 transition"
+          >
             View All Participants →
           </button>
+
+          {/* All Participants Modal */}
+          {showAllModal && (
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              <div className="flex min-h-screen items-center justify-center p-4">
+                <div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                  onClick={() => setShowAllModal(false)}
+                />
+                <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl p-6 animate-slide-up max-h-[80vh] flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      All Multi-Activity Participants ({crossActivity.multiActivityAttendees.length})
+                    </h3>
+                    <button
+                      onClick={() => setShowAllModal(false)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto space-y-2 pr-2 min-h-0 flex-1">
+                    {crossActivity.multiActivityAttendees.map((attendee, index) => (
+                      <div
+                        key={attendee.attendeeId}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-800 rounded-full font-semibold text-sm flex-shrink-0">
+                            {index + 1}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 text-sm truncate">{attendee.attendeeName}</p>
+                            <p className="text-xs text-gray-600 line-clamp-1">
+                              Activities: {attendee.activities.join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full whitespace-nowrap">
+                          {attendee.activityCount} activities
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Activity Relationships */}

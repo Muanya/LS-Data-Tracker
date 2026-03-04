@@ -104,7 +104,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Attendance Trends Chart */}
                     <div className="md:col-span-1">
-                        <AttendanceChart activities={data.activities} trends={data.trends} />
+                        <AttendanceChart trends={data.trends} />
                     </div>
                 </div>
 

@@ -2,12 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   Users, Calendar, Save, CheckCircle,
   Moon, Sun, Sparkles,
-  Activity, Target, RefreshCw, ShieldCheck,
+  Activity, RefreshCw, ShieldCheck,
   Download, Eye,
   AlertCircle,
   ChevronRight
 } from 'lucide-react';
-import type { User, Activity as ActivityType, CircleGroup } from '../utils/types';
+import type { User, Activity as ActivityType } from '../utils/types';
+import { getIcon } from '../utils/iconMapping';
+import { createGradientFromColor, getGradientStyle } from '../utils/colorUtils';
 import { UserList } from '../components/UserList';
 import { CreateUserModal } from '../components/CreateUserModal';
 import { PreviewModal } from '../components/PreviewModal';
@@ -16,7 +18,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import apiService from '../services/apiService';
 import { UtilService } from '../services/utilService';
-import { useAttendeesData, useCircleGroupsData } from '../hooks/useAttendanceData';
+import { useAttendeesData, useActivitiesData, useActivityGroupsData } from '../hooks/useAttendanceData';
 import Header from '../components/Header';
 import ActivitySelectModal from '../components/AcitivitySelectModal';
 
@@ -25,15 +27,16 @@ import ActivitySelectModal from '../components/AcitivitySelectModal';
 const Attendance: React.FC = () => {
   // State
   const [selectedAttendees, setSelectedAttendees] = useState<User[]>([]);
-  const [activities] = useState<ActivityType[]>([
-    { id: 'Med', name: 'Meditation', frequency: 'Weekly', icon: <Moon />, color: 'blue', gradient: 'from-blue-500 to-cyan-500' },
-    { id: 'Circle', name: 'Circle', frequency: 'Weekly', icon: <Users />, color: 'purple', gradient: 'from-purple-500 to-pink-500' },
-    { id: 'Recollection', name: 'Recollection', frequency: 'Monthly', icon: <Activity />, color: 'emerald', gradient: 'from-emerald-500 to-green-500' },
-    { id: 'Retreat', name: 'Retreat', frequency: 'Yearly', icon: <Target />, color: 'amber', gradient: 'from-amber-500 to-orange-500' },
-  ]);
-
-  const [circleGroups, setCircleGroups] = useState<ActivityType[]>([]);
-  const [selectedActivity, setSelectedActivity] = useState<ActivityType>(activities[0]);
+  const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useActivitiesData();
+  const activities = useMemo(() => {
+    if (!activitiesData?.activities) return [];
+    return activitiesData.activities.map(activity => ({
+      ...activity,
+      gradient: createGradientFromColor(activity.color)
+    }));
+  }, [activitiesData]);
+  
+  const [selectedActivity, setSelectedActivity] = useState<ActivityType | null>(null);
   const [selectedCircleGroup, setSelectedCircleGroup] = useState<ActivityType | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
@@ -48,8 +51,24 @@ const Attendance: React.FC = () => {
   const [showSelectCircleModal, setShowSelectCircleModal] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
+  // Initialize selectedActivity when activities load
+  useEffect(() => {
+    if (activities.length > 0 && !selectedActivity) {
+      setSelectedActivity(activities[0]);
+    }
+  }, [activities, selectedActivity]);
+
+  // Show message when activities data loads or errors occur
+  useEffect(() => {
+    if (activitiesError) {
+      showMessage('Failed to load activities', 'error');
+    } else if (activitiesData && !activitiesLoading) {
+      showMessage('Activities loaded successfully', 'success');
+    }
+  }, [activitiesError, activitiesData, activitiesLoading]);
+
   const { data: attendeesData, isLoading, error, refetch } = useAttendeesData();
-  const { data: circleGroupsData, isLoading: isCircleGroupsLoading, refetch: refetchCircleGroups } = useCircleGroupsData();
+  const { data: activityGroupsData, isLoading: isActivityGroupsLoading, refetch: refetchActivityGroups } = useActivityGroupsData(selectedActivity?.id);
 
 
   // Process attendees data when loaded
@@ -58,24 +77,35 @@ const Attendance: React.FC = () => {
     return UtilService.processUser(attendeesData);
   }, [attendeesData]);
 
-  const processCircleGroups = (circleGroupsData: CircleGroup[]): ActivityType[] => {
-    return circleGroupsData.map(cg => ({
-      id: cg.id,
-      name: cg.name,
-      frequency: 'Weekly',
-      icon: <Users />,
-      color: 'amber',
-      gradient: 'from-amber-500 to-orange-500'
+  // Process activity groups when loaded
+  const activityGroups = useMemo(() => {
+    if (!activityGroupsData?.groups) return [];
+    return activityGroupsData.groups.map(group => ({
+      id: group.id,
+      name: group.name,
+      displayName: group.name,
+      category: selectedActivity?.category || 'group',
+      frequency: selectedActivity?.frequency || 'Weekly',
+      type: 'grouped' as const,
+      icon: selectedActivity?.icon || 'Users',
+      color: selectedActivity?.color || '#3B82F6',
+      gradient: createGradientFromColor(selectedActivity?.color || '#3B82F6'),
+      dataType: 'grouped' as const,
+      reportKey: selectedActivity?.reportKey || 'group',
+      displayOrder: selectedActivity?.displayOrder || 1,
+      requiresGroup: false,
+      includeInQuarterReport: false,
+      includeInAttendanceTracking: true,
+      aggregationMethod: 'count' as const
     }));
+  }, [activityGroupsData, selectedActivity]);
 
-  }
-
-  useMemo(() => {
-    if (!circleGroupsData) return [];
-    const cg = processCircleGroups(circleGroupsData);
-    setCircleGroups(cg);
-    setSelectedCircleGroup(cg[0]);
-  }, [circleGroupsData]);
+  // Set activity groups when loaded
+  useEffect(() => {
+    if (activityGroups.length > 0 && !selectedCircleGroup) {
+      setSelectedCircleGroup(activityGroups[0]);
+    }
+  }, [activityGroups, selectedCircleGroup]);
 
   // Compute stats
   const stats = useMemo(() => {
@@ -171,8 +201,8 @@ const Attendance: React.FC = () => {
       return;
     }
 
-    if (selectedActivity.id === 'Circle' && selectedCircleGroup === null) {
-      showMessage('Please select a circle group', 'error');
+    if (selectedActivity?.requiresGroup && selectedCircleGroup === null) {
+      showMessage(`Please select a ${selectedActivity.groupType === 'circle' ? 'circle' : 'activity'} group`, 'error');
       return;
     }
 
@@ -183,7 +213,7 @@ const Attendance: React.FC = () => {
           id: a.id,
           name: a.firstName + ' ' + a.lastName
         })),
-        activity: selectedActivity.id,
+        activity: selectedActivity?.id || '',
         date: selectedDate,
         groupId: selectedCircleGroup!.id,
         groupName: selectedCircleGroup!.name
@@ -285,11 +315,14 @@ const Attendance: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">Activity</p>
                 <p className="text-lg font-bold text-gray-900 mt-2">
-                  {selectedActivity?.name}
+                  {selectedActivity?.name || 'Select Activity'}
                 </p>
               </div>
-              <div className={`w-12 h-12 bg-gradient-to-r ${selectedActivity?.gradient} rounded-xl flex items-center justify-center`}>
-                {selectedActivity.icon}
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={getGradientStyle(selectedActivity?.color || '#8B5CF6')}
+              >
+                {selectedActivity ? getIcon(selectedActivity.icon) : <Activity />}
               </div>
             </div>
           </Card>
@@ -343,9 +376,12 @@ const Attendance: React.FC = () => {
                         : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                         }`}
                     >
-                      <div className={`w-12 h-12 bg-gradient-to-r ${selectedActivity?.gradient} rounded-xl flex items-center justify-center`}>
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        style={getGradientStyle(selectedActivity?.color || '#8B5CF6')}
+                      >
                         <div className="w-6 h-6 text-white">
-                          {selectedActivity?.icon}
+                          {selectedActivity ? getIcon(selectedActivity.icon) : <Activity />}
                         </div>
                       </div>
                       <div className="text-left flex-1">
@@ -359,14 +395,14 @@ const Attendance: React.FC = () => {
                 </div>
 
 
-                {/* Circle Group Selection - only when circle is selected */}
-                {selectedActivity?.id === 'Circle' && (
+                {/* Group Selection - only when activity requires groups */}
+                {selectedActivity?.requiresGroup && (
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary-500" />
-                      Selected Circle Group
+                      Selected {selectedActivity.groupType === 'circle' ? 'Circle' : 'Activity'} Group
                     </h3>
-                    {isCircleGroupsLoading ? (
+                    {isActivityGroupsLoading ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {[...Array(8)].map((_, i) => (
                           <Card key={i} className="animate-pulse">
@@ -380,10 +416,10 @@ const Attendance: React.FC = () => {
                           </Card>
                         ))}
                       </div>
-                    ) : circleGroups.length == 0 ? (
+                    ) : activityGroups.length == 0 ? (
                       <div className="text-center py-8">
-                        <div className="text-gray-500 mb-2">No circle groups available</div>
-                        <Button variant="danger" onClick={() => refetchCircleGroups()}>
+                        <div className="text-gray-500 mb-2">No {selectedActivity?.groupType === 'circle' ? 'circle' : 'activity'} groups available</div>
+                        <Button variant="danger" onClick={() => refetchActivityGroups()}>
                           Retry
                         </Button>
                       </div>
@@ -396,9 +432,12 @@ const Attendance: React.FC = () => {
                             : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                             }`}
                         >
-                          <div className={`w-12 h-12 bg-gradient-to-r ${selectedCircleGroup?.gradient} rounded-xl flex items-center justify-center`}>
+                          <div
+                            className="w-12 h-12 rounded-xl flex items-center justify-center"
+                            style={getGradientStyle(selectedCircleGroup?.color || '#8B5CF6')}
+                          >
                             <div className="w-6 h-6 text-white">
-                              {selectedCircleGroup?.icon}
+                              {selectedCircleGroup ? getIcon(selectedCircleGroup.icon) : <Users />}
                             </div>
                           </div>
                           <div className="text-left flex-1">
@@ -524,7 +563,7 @@ const Attendance: React.FC = () => {
         onSubmit={handleSaveAttendance}
         onEdit={() => setShowPreviewModal(false)}
         selectedAttendees={selectedAttendees}
-        selectedActivity={selectedActivity.id}
+        selectedActivity={selectedActivity?.id || ''}
         selectedCircleGroup={selectedCircleGroup?.name || ''}
         selectedDate={selectedDate}
         activities={activities}
@@ -533,7 +572,7 @@ const Attendance: React.FC = () => {
       {/* Activity Select Modal */}
       <ActivitySelectModal
         isOpen={showSelectActivityModal}
-        selectedActivity={selectedActivity.id}
+        selectedActivity={selectedActivity?.id || ''}
         onClose={() => setShowSelectActivityModal(false)}
         activities={activities}
         onSelectActivity={(activity) => setSelectedActivity(activity)}
@@ -544,7 +583,7 @@ const Attendance: React.FC = () => {
         isOpen={showSelectCircleModal}
         selectedActivity={selectedCircleGroup?.id || ''}
         onClose={() => setShowSelectCircleModal(false)}
-        activities={circleGroups}
+        activities={activityGroups}
         onSelectActivity={(circleGroup) => setSelectedCircleGroup(circleGroup)}
       />
     </div>

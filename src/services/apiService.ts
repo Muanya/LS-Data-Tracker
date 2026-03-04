@@ -1,5 +1,5 @@
 import axios, { type AxiosInstance } from 'axios';
-import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse, ApiResponse, DashboardData, QuarterReportData, QuarterReportApiResponse } from '../utils/types';
+import type { User, CircleGroup, AttendanceRecord, ActivitySummary, AttendeeSummary, BulkAttendanceResponse, ApiResponse, DashboardData, QuarterReportData, QuarterReportApiResponse, ActivityConfigResponse, ActivityGroupResponse, QuarterReportBackendConfig } from '../utils/types';
 import { environment } from '../environment';
 
 const API_URL = environment.BASE_API_URL;
@@ -26,15 +26,29 @@ class ApiService {
         }
     }
 
-    async getCircleGroups(): Promise<CircleGroup[]> {
+    async getActivityGroups(activityId: string): Promise<ActivityGroupResponse> {
         try {
-            const result: ApiResponse<CircleGroup[]> = (await this.client.get('', { params: { action: 'getCircleGroups' } })).data;
+            const result: ApiResponse<ActivityGroupResponse> = (await this.client.get('', { 
+                params: { action: 'getActivityGroups', activityId } 
+            })).data;
             if (!result.success) {
-                throw new Error(result.message || 'Failed to fetch circle groups');
+                throw new Error(result.message || 'Failed to fetch activity groups');
             }
             return result.data;
         } catch (error) {
-            throw new Error(`Failed to get circle groups: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Failed to get activity groups: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    async getActivities(): Promise<ActivityConfigResponse> {
+        try {
+            const result: ApiResponse<ActivityConfigResponse> = (await this.client.get('', { params: { action: 'getActivities' } })).data;
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to fetch activities');
+            }
+            return result.data;
+        } catch (error) {
+            throw new Error(`Failed to get activities: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 
@@ -263,6 +277,20 @@ class ApiService {
             return result.data;
         } catch (error) {
             throw new Error(`Failed to get quarter report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
+
+    async getQuarterReportConfig(): Promise<QuarterReportBackendConfig> {
+        try {
+            const result: ApiResponse<QuarterReportBackendConfig> = (await this.client.get('', { 
+                params: { action: 'getQuarterReportConfig' } 
+            })).data;
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to fetch quarter report config');
+            }
+            return result.data;
+        } catch (error) {
+            throw new Error(`Failed to get quarter report config: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
 }

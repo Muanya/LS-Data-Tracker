@@ -1,48 +1,116 @@
 import React, { useState } from 'react';
-import type { QuarterReportData, MonthStats, Quarter } from '../../utils/types';
+import type { QuarterReportData, MonthStats, Quarter, QuarterReportBackendConfig } from '../../utils/types';
+
+export interface RowDef {
+    num: number;
+    label: string;
+    key: keyof MonthStats;
+    isText?: boolean;
+    category?: 'apostolate' | 'formation' | 'activities' | 'retreats' | 'other';
+}
+
+// Legacy: All available rows - kept for fallback
+export const ALL_ROWS: RowDef[] = [
+    { num: 1, label: "Number of persons in the work of sr Apostolate", key: "personsInWork", category: "apostolate" },
+    { num: 2, label: "Number of boys in contact", key: "boysInContact", category: "apostolate" },
+    { num: 3, label: "Number of boys going regularly (every 2 weeks at least) to spiritual direction with sacd of the work", key: "boysGoingToSD", category: "apostolate" },
+    { num: 4, label: "Number of boys that attend classes of doctrine and human formation (average per week)", key: "boysDoctrineAvg", category: "formation" },
+    { num: 5, label: "Number of classes of doctrine", key: "numDoctrineCls", category: "formation" },
+    { num: 6, label: "Number of boys that attend catechism classes", key: "catechismBreakdown", isText: true, category: "formation" },
+    { num: 7, label: "Number of circles (prep classes)", key: "numCircles", category: "formation" },
+    { num: 8, label: "Number of boys attending circles", key: "boysAttendingCircles", category: "formation" },
+    { num: 9, label: "Number of professional classes", key: "numProfClasses", category: "formation" },
+    { num: 10, label: "Number of boys attending professional classes", key: "boysAttendingProfClasses", category: "formation" },
+    { num: 11, label: "Number of boys that have visited the poor of our lady", key: "boysVisitedPoor", category: "activities" },
+    { num: 12, label: "Number of boys teaching catechism", key: "boysTeachingCatechism", category: "activities" },
+    { num: 13, label: "Number of meditations held", key: "numMeditations", category: "activities" },
+    { num: 14, label: "Number of boys attending meditations (average per week)", key: "boysAttendingMeditationsAvg", category: "activities" },
+    { num: 15, label: "Number of Monthly retreats", key: "numMonthlyRetreats", category: "retreats" },
+    { num: 16, label: "Boys attending monthly retreats (Total for the month)", key: "boysMonthlyRetreats", category: "retreats" },
+    { num: 17, label: "Number of Long retreats", key: "numLongRetreats", category: "retreats" },
+    { num: 18, label: "Boys that have attended long retreats", key: "boysLongRetreats", category: "retreats" },
+    { num: 19, label: "Number of Eucharistic vigils", key: "numEucharisticVigils", category: "activities" },
+    { num: 20, label: "Number of spiritual direction sessions", key: "numSpiritualDirection", category: "activities" },
+    { num: 21, label: "Number of visits to the poor", key: "numVisitsToThePoor", category: "activities" },
+    { num: 22, label: "Number of professional get-togethers", key: "numProfessionalGetTogethers", category: "activities" },
+    { num: 23, label: "Number of workshops", key: "numWorkshops", category: "activities" },
+    { num: 24, label: "Boys that have attended cv", key: "boysAttendedCV", category: "other" },
+    { num: 25, label: "Total number of sr boys", key: "totalSRBoys", category: "other" },
+];
+
+// Default visible rows (backward compatible)
+export const DEFAULT_VISIBLE_ROWS = ALL_ROWS.map(r => r.key);
+
+export interface RowConfig {
+    visibleRows: (keyof MonthStats)[];
+    customLabels?: Partial<Record<keyof MonthStats, string>>;
+    backendConfig?: QuarterReportBackendConfig;
+}
 
 interface QuarterReportTableProps {
     data: QuarterReportData;
     printMode?: boolean;
     onDataChange?: (data: QuarterReportData) => void;
+    rowConfig?: RowConfig;
 }
 
 const QUARTER_LABELS: Record<Quarter, string> = {
     Q1: "1st Quarter", Q2: "2nd Quarter", Q3: "3rd Quarter", Q4: "4th Quarter",
 };
 
-interface RowDef {
-    num: number;
-    label: string;
-    key: keyof MonthStats;
-    isText?: boolean;
-}
-
-const ROWS: RowDef[] = [
-    { num: 1,  label: "Number of persons in the work of sr Apostolate",                              key: "personsInWork" },
-    { num: 2,  label: "Number of boys in contact",                                                    key: "boysInContact" },
-    { num: 3,  label: "Number of boys going regularly (every 2 weeks at least) to spiritual direction with sacd of the work", key: "boysGoingToSD" },
-    { num: 4,  label: "Number of boys that attend classes of doctrine and human formation (average per week)", key: "boysDoctrineAvg" },
-    { num: 5,  label: "Number of boys that attend catechism classes",                                key: "catechismBreakdown", isText: true },
-    { num: 6,  label: "Number of circles (prep classes)",                                            key: "numCircles" },
-    { num: 7,  label: "Number of boys attending circles",                                             key: "boysAttendingCircles" },
-    { num: 8,  label: "Number of professional classes",                                              key: "numProfClasses" },
-    { num: 9,  label: "Number of boys attending professional classes",                               key: "boysAttendingProfClasses" },
-    { num: 10, label: "Number of boys that have visited the poor of our lady",                      key: "boysVisitedPoor" },
-    { num: 11, label: "Number of boys teaching catechism",                                           key: "boysTeachingCatechism" },
-    { num: 12, label: "Number of meditations held",                                                  key: "numMeditations" },
-    { num: 13, label: "Number of boys attending meditations (average per week)",                    key: "boysAttendingMeditationsAvg" },
-    { num: 14, label: "Number of Monthly retreats",                                                  key: "numMonthlyRetreats" },
-    { num: 15, label: "Boys attending monthly retreats (Total for the month)",                      key: "boysMonthlyRetreats" },
-    { num: 16, label: "Number of Long retreats",                                                     key: "numLongRetreats" },
-    { num: 17, label: "Boys that have attended long retreats",                                       key: "boysLongRetreats" },
-    { num: 18, label: "Boys that have attended cv",                                                  key: "boysAttendedCV" },
-    { num: 19, label: "Total number of sr boys",                                                     key: "totalSRBoys" },
-];
-
-export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, printMode = false, onDataChange }) => {
+export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ 
+    data, 
+    printMode = false, 
+    onDataChange,
+    rowConfig 
+}) => {
     const [editedData, setEditedData] = useState<QuarterReportData>(data);
     const [editingCell, setEditingCell] = useState<string | null>(null);
+
+    // Build rows from backend config if available, otherwise use ALL_ROWS
+    const buildRowsFromConfig = (): RowDef[] => {
+        const backendConfig = rowConfig?.backendConfig;
+        if (backendConfig?.fields && backendConfig.fields.length > 0) {
+            // Use backend configuration
+            return backendConfig.fields
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map((field, idx) => ({
+                    num: idx + 1,
+                    label: field.label,
+                    key: field.key as keyof MonthStats,
+                    isText: field.dataType === 'text',
+                }));
+        }
+        // Fallback to ALL_ROWS
+        return ALL_ROWS;
+    };
+
+    const availableRows = buildRowsFromConfig();
+    
+    // Determine visible rows - use backend default visibility or rowConfig.visibleRows
+    const getVisibleRows = (): (keyof MonthStats)[] => {
+        const backendConfig = rowConfig?.backendConfig;
+        if (backendConfig?.fields && backendConfig.fields.length > 0) {
+            // If no user selection, use backend defaults
+            if (!rowConfig?.visibleRows || rowConfig.visibleRows.length === 0) {
+                return backendConfig.fields
+                    .filter(f => f.isVisibleByDefault)
+                    .map(f => f.key as keyof MonthStats);
+            }
+        }
+        return rowConfig?.visibleRows ?? DEFAULT_VISIBLE_ROWS;
+    };
+
+    const visibleRows = getVisibleRows();
+    const ROWS = availableRows.filter(row => visibleRows.includes(row.key));
+    
+    // Apply custom labels if provided
+    const getRowLabel = (row: RowDef): string => {
+        if (rowConfig?.customLabels?.[row.key]) {
+            return rowConfig.customLabels[row.key]!;
+        }
+        return row.label;
+    };
 
     const months = editedData.months;
 
@@ -194,7 +262,7 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
                                         fontWeight: 700,
                                         fontSize: printMode ? 10 : 11,
                                         fontFamily: printMode ? "Arial" : "'JetBrains Mono', monospace",
-                                    }}>{row.num}</td>
+                                    }}>{idx + 1}</td>
 
                                     <td style={{
                                         ...tdBase,
@@ -202,7 +270,7 @@ export const QuarterReportTable: React.FC<QuarterReportTableProps> = ({ data, pr
                                         color: labelClr,
                                         lineHeight: 1.5,
                                         paddingLeft: 12,
-                                    }}>{row.label}</td>
+                                    }}>{getRowLabel(row)}</td>
 
                                     {months.map((m, monthIndex) => {
                                         const val = cellVal(m, row.key);

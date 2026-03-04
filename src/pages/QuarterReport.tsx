@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import Header from '../components/Header';
 import { QuarterReportControls } from '../components/report/QuarterReportControls';
-import { QuarterReportTable } from '../components/report/QuarterReportTable';
+import { QuarterReportTable, ALL_ROWS, DEFAULT_VISIBLE_ROWS, type RowConfig } from '../components/report/QuarterReportTable';
 import { Card } from '../components/ui/Card';
 import apiService from '../services/apiService';
-import type { QuarterReportData, QuarterReportFilters, MonthStats } from '../utils/types';
+import type { QuarterReportData, QuarterReportFilters, MonthStats, QuarterReportBackendConfig } from '../utils/types';
 
 // Print styles for export
 const PRINT_STYLES = `
@@ -12,11 +12,12 @@ const PRINT_STYLES = `
   body * { visibility: hidden !important; }
   #report-print-area, #report-print-area * { visibility: visible !important; }
   #report-print-area {
-    position: fixed !important;
+    position: absolute !important;
     top: 0 !important; left: 0 !important;
     width: 100% !important;
     background: white !important;
     padding: 24px !important;
+    page-break-inside: avoid !important;
   }
   .no-print { display: none !important; }
 }
@@ -33,20 +34,77 @@ export default function QuarterReport() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editedData, setEditedData] = useState<QuarterReportData | null>(null);
+    const [showConfig, setShowConfig] = useState(false);
+    const [rowConfig, setRowConfig] = useState<RowConfig>({ visibleRows: DEFAULT_VISIBLE_ROWS });
+    const [backendConfig, setBackendConfig] = useState<QuarterReportBackendConfig | null>(null);
+
+    // Toggle row visibility
+    const toggleRow = (key: keyof MonthStats) => {
+        setRowConfig(prev => {
+            const isVisible = prev.visibleRows.includes(key);
+            const newVisibleRows = isVisible
+                ? prev.visibleRows.filter(k => k !== key)
+                : [...prev.visibleRows, key];
+            return { ...prev, visibleRows: newVisibleRows };
+        });
+    };
+
+    // Select all rows
+    const selectAllRows = () => {
+        setRowConfig(prev => ({ ...prev, visibleRows: ALL_ROWS.map(r => r.key) }));
+    };
+
+    // Reset to defaults
+    const resetRows = () => {
+        setRowConfig({ visibleRows: DEFAULT_VISIBLE_ROWS });
+    };
 
     const printRef = useRef<HTMLDivElement>(null);
+
+    // Get available rows - from backend config or fallback to ALL_ROWS
+    const availableRows = useMemo(() => {
+        if (backendConfig?.fields && backendConfig.fields.length > 0) {
+            return backendConfig.fields
+                .sort((a, b) => a.displayOrder - b.displayOrder)
+                .map((field, idx) => ({
+                    num: idx + 1,
+                    label: field.label,
+                    key: field.key as keyof MonthStats,
+                }));
+        }
+        return ALL_ROWS;
+    }, [backendConfig]);
+
+    // Get current visible rows for CSV export
+    const currentRows = useMemo(() => {
+        return availableRows.filter(row => rowConfig.visibleRows.includes(row.key));
+    }, [availableRows, rowConfig.visibleRows]);
 
     // Fetch quarter report data
     const fetchReport = useCallback(async () => {
         setLoading(true);
         setError("");
         try {
-            const reportData = await apiService.getQuarterReport(
-                filters.quarter, 
-                filters.year, 
-                filters.centre
-            );
+            // Fetch both report data and config
+            const [reportData, configData] = await Promise.all([
+                apiService.getQuarterReport(
+                    filters.quarter, 
+                    filters.year, 
+                    filters.centre
+                ),
+                apiService.getQuarterReportConfig?.() ?? Promise.resolve(null),
+            ]);
             setData(reportData);
+            
+            // If backend returns config, use it
+            if (configData) {
+                setBackendConfig(configData);
+                // Initialize visible rows with backend defaults
+                const defaultVisible = configData.fields
+                    .filter((f: { isVisibleByDefault: boolean }) => f.isVisibleByDefault)
+                    .map((f: { key: string }) => f.key as keyof MonthStats);
+                setRowConfig(prev => ({ ...prev, visibleRows: defaultVisible, backendConfig: configData }));
+            }
         } catch (e: unknown) {
             setError(e instanceof Error ? e.message : "Failed to fetch report.");
             setData(null);
@@ -73,37 +131,15 @@ export default function QuarterReport() {
         const exportData = editedData || data;
         if (!exportData) return;
 
-        const ROWS = [
-            { num: 1,  label: "Number of persons in the work of sr Apostolate",                              key: "personsInWork" as keyof MonthStats },
-            { num: 2,  label: "Number of boys in contact",                                                    key: "boysInContact" as keyof MonthStats },
-            { num: 3,  label: "Number of boys going regularly (every 2 weeks at least) to spiritual direction with sacd of the work", key: "boysGoingToSD" as keyof MonthStats },
-            { num: 4,  label: "Number of boys that attend classes of doctrine and human formation (average per week)", key: "boysDoctrineAvg" as keyof MonthStats },
-            { num: 5,  label: "Number of boys that attend catechism classes",                                key: "catechismBreakdown" as keyof MonthStats },
-            { num: 6,  label: "Number of circles (prep classes)",                                            key: "numCircles" as keyof MonthStats },
-            { num: 7,  label: "Number of boys attending circles",                                             key: "boysAttendingCircles" as keyof MonthStats },
-            { num: 8,  label: "Number of professional classes",                                              key: "numProfClasses" as keyof MonthStats },
-            { num: 9,  label: "Number of boys attending professional classes",                               key: "boysAttendingProfClasses" as keyof MonthStats },
-            { num: 10, label: "Number of boys that have visited the poor of our lady",                      key: "boysVisitedPoor" as keyof MonthStats },
-            { num: 11, label: "Number of boys teaching catechism",                                           key: "boysTeachingCatechism" as keyof MonthStats },
-            { num: 12, label: "Number of meditations held",                                                  key: "numMeditations" as keyof MonthStats },
-            { num: 13, label: "Number of boys attending meditations (average per week)",                    key: "boysAttendingMeditationsAvg" as keyof MonthStats },
-            { num: 14, label: "Number of Monthly retreats",                                                  key: "numMonthlyRetreats" as keyof MonthStats },
-            { num: 15, label: "Boys attending monthly retreats (Total for the month)",                      key: "boysMonthlyRetreats" as keyof MonthStats },
-            { num: 16, label: "Number of Long retreats",                                                     key: "numLongRetreats" as keyof MonthStats },
-            { num: 17, label: "Boys that have attended long retreats",                                       key: "boysLongRetreats" as keyof MonthStats },
-            { num: 18, label: "Boys that have attended cv",                                                  key: "boysAttendedCV" as keyof MonthStats },
-            { num: 19, label: "Total number of sr boys",                                                     key: "totalSRBoys" as keyof MonthStats },
-        ];
-
         const months = exportData.months;
         const header = ["#", "Metric", ...months.map(m => m.month)].join(",");
-        const rows = ROWS.map(row => {
+        const rows = currentRows.map((row, idx) => {
             const vals = months.map(m => {
                 const v = m[row.key];
                 const str = String(v).replace(/\n/g, " | ").replace(/,/g, ";");
                 return `"${str}"`;
             });
-            return [`${row.num}`, `"${row.label}"`, ...vals].join(",");
+            return [`${idx + 1}`, `"${row.label}"`, ...vals].join(",");
         });
         const csv = [header, ...rows].join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
@@ -188,14 +224,65 @@ export default function QuarterReport() {
                                     </span>
                                 </div>
                                 <span className="text-xs text-gray-500">
-                                    {data.months.length} months · 19 metrics
+                                    {data.months.length} months · {currentRows.length} metrics
                                 </span>
+                                <button
+                                    onClick={() => setShowConfig(!showConfig)}
+                                    className="ml-3 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                    ⚙️ Configure
+                                </button>
                             </div>
 
                             {/* Printable area */}
                             <div id="report-print-area" ref={printRef} className="p-4 sm:p-7">
-                                <QuarterReportTable data={data} onDataChange={handleDataChange} />
+                                <QuarterReportTable data={data} onDataChange={handleDataChange} rowConfig={rowConfig} />
                             </div>
+                                                        {/* Configuration Panel */}
+                            {showConfig && (
+                                <div className="no-print border-t border-gray-100 bg-gray-50 p-4 sm:p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-sm font-bold text-gray-700">Report Configuration</h3>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={selectAllRows}
+                                                className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                            >
+                                                Select All
+                                            </button>
+                                            <button
+                                                onClick={resetRows}
+                                                className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                            >
+                                                Reset
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
+                                        {availableRows.map((row) => (
+                                            <label
+                                                key={String(row.key)}
+                                                className="flex items-start gap-2 p-2 rounded-lg hover:bg-white cursor-pointer transition-colors"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={rowConfig.visibleRows.includes(row.key)}
+                                                    onChange={() => toggleRow(row.key)}
+                                                    className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span className="text-xs text-gray-600 leading-tight">
+                                                    {row.label}
+                                                </span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                    {backendConfig && (
+                                        <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                                            Config version: {backendConfig.version} • Last updated: {new Date(backendConfig.lastUpdated).toLocaleDateString()}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </Card>
                     )}
 

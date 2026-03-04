@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LineChart,
   Line,
@@ -9,25 +9,47 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-import type { DashboardActivity } from '../utils/types';
+import type { SessionTrends } from '../utils/types';
 
 interface AttendanceChartProps {
-  activities: DashboardActivity[];
-  trends: {
-    labels: string[];
-    datasets: Array<{
-      label: string;
-      data: number[];
-      borderColor: string;
-    }>;
-  };
+  trends: SessionTrends;
 }
 
-const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends }) => {
-  // Transform data for Recharts
-  const chartData = trends.labels.map((label, index) => {
+const AttendanceChart: React.FC<AttendanceChartProps> = ({ trends }) => {
+  // State for selected activities (default all selected)
+  const [selectedActivities, setSelectedActivities] = useState<Set<string>>(
+    () => new Set(trends.trends.datasets.map(d => d.label))
+  );
+
+  // Toggle activity selection
+  const toggleActivity = (label: string) => {
+    setSelectedActivities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(label)) {
+        newSet.delete(label);
+      } else {
+        newSet.add(label);
+      }
+      return newSet;
+    });
+  };
+
+  // Select all activities
+  const selectAll = () => {
+    setSelectedActivities(new Set(trends.trends.datasets.map(d => d.label)));
+  };
+
+  // Clear all selections
+  const clearAll = () => {
+    setSelectedActivities(new Set());
+  };
+
+  // Filter datasets based on selection
+  const filteredDatasets = trends.trends.datasets.filter(d => selectedActivities.has(d.label));
+  // Transform data for Recharts - only include selected activities
+  const chartData = trends.trends.labels.map((label, index) => {
     const dataPoint: any = { day: label };
-    trends.datasets.forEach(dataset => {
+    filteredDatasets.forEach(dataset => {
       dataPoint[dataset.label] = dataset.data[index] || 0;
     });
     return dataPoint;
@@ -52,13 +74,53 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends })
 
   return (
     <div className="bg-white rounded-xl shadow-md p-5 h-full">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">Weekly Attendance Trend</h3>
-        <select className="text-sm border border-gray-300 rounded-lg px-3 py-1">
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="quarter">This Quarter</option>
-        </select>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-lg font-semibold text-gray-800">Session Attendance Trends</h3>
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+            {trends.summary.sessionGrowth}
+          </span>
+        </div>
+      </div>
+
+      {/* Activity Selector */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-600">Show Activities</span>
+          <div className="flex gap-2">
+            <button
+              onClick={selectAll}
+              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+            >
+              All
+            </button>
+            <button
+              onClick={clearAll}
+              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
+            >
+              None
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {trends.trends.datasets.map((dataset) => (
+            <button
+              key={dataset.label}
+              onClick={() => toggleActivity(dataset.label)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                selectedActivities.has(dataset.label)
+                  ? 'bg-gray-800 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+              }`}
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: selectedActivities.has(dataset.label) ? 'white' : dataset.borderColor }}
+              />
+              {dataset.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="h-64">
@@ -87,12 +149,13 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends })
               height={36}
               wrapperStyle={{ fontSize: '12px' }}
             />
-            {activities.map((activity) => (
+            {filteredDatasets.map((dataset) => (
               <Line
-                key={activity.id}
+                key={dataset.label}
                 type="monotone"
-                dataKey={activity.name}
-                stroke={activity.color}
+                dataKey={dataset.label}
+                stroke={dataset.borderColor}
+                fill={dataset.backgroundColor}
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5, strokeWidth: 0 }}
@@ -102,16 +165,33 @@ const AttendanceChart: React.FC<AttendanceChartProps> = ({ activities, trends })
         </ResponsiveContainer>
       </div>
 
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-gray-100">
+        <div className="text-center">
+          <p className="text-2xl font-bold text-gray-900">{trends.summary.totalSessions}</p>
+          <p className="text-xs text-gray-500">Total Sessions</p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl font-bold text-gray-900">{trends.summary.totalAttendance}</p>
+          <p className="text-xs text-gray-500">Total Attendance</p>
+        </div>
+        <div className="text-center">
+          <p className="text-2xl font-bold text-gray-900">{trends.summary.averageSessionAttendance}</p>
+          <p className="text-xs text-gray-500">Avg per Session</p>
+        </div>
+      </div>
+
+      {/* Activity Legend - show filtered stats */}
       <div className="flex flex-wrap gap-3 mt-6 justify-center">
-        {activities.map((activity) => (
-          <div key={activity.id} className="flex items-center">
+        {filteredDatasets.map((dataset) => (
+          <div key={dataset.label} className="flex items-center">
             <div
               className="w-3 h-3 rounded-full mr-2"
-              style={{ backgroundColor: activity.color }}
+              style={{ backgroundColor: dataset.borderColor }}
             ></div>
-            <span className="text-sm text-gray-600">{activity.name}</span>
+            <span className="text-sm text-gray-600">{dataset.label}</span>
             <span className="text-xs text-gray-400 ml-1">
-              ({activity.stats.totalAttendees})
+              ({dataset.sessions} sessions, avg: {dataset.averageAttendance})
             </span>
           </div>
         ))}
