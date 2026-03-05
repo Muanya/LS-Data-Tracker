@@ -8,6 +8,7 @@ interface CrossActivityAnalysisProps {
 
 const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActivity }) => {
   const [showAllModal, setShowAllModal] = useState(false);
+  const [showAllRelationshipsModal, setShowAllRelationshipsModal] = useState(false);
 
   return (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 mb-6">
@@ -107,6 +108,62 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
               </div>
             </div>
           )}
+
+          {/* All Relationships Modal */}
+          {showAllRelationshipsModal && (
+            <div className="fixed inset-0 z-50 overflow-y-auto">
+              <div className="flex min-h-screen items-center justify-center p-4">
+                <div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+                  onClick={() => setShowAllRelationshipsModal(false)}
+                />
+                <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-xl p-6 animate-slide-up max-h-[80vh] flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      All Activity Relationships ({crossActivity.activityOverlaps.length})
+                    </h3>
+                    <button
+                      onClick={() => setShowAllRelationshipsModal(false)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
+                    >
+                      <X className="w-5 h-5 text-gray-500" />
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto space-y-3 pr-2 min-h-0 flex-1">
+                    {crossActivity.activityOverlaps.map((item, index) => (
+                      <div key={index} className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                          <span className="font-medium text-gray-900 text-sm truncate">{item.pair}</span>
+                          <span className="text-xs text-gray-700 whitespace-nowrap">Overlap: {item.overlap}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full ${item.correlation === 'High' ? 'bg-green-500' :
+                              item.correlation === 'Medium' ? 'bg-amber-500' : 'bg-red-500'
+                              }`}
+                            style={{
+                              width: `${parseInt(item.overlap)}%`,
+                              maxWidth: '100%'
+                            }}
+                          ></div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 mt-1">
+                          <span className={`text-xs ${item.correlation === 'High' ? 'text-green-600' :
+                            item.correlation === 'Medium' ? 'text-amber-600' : 'text-red-600'
+                            }`}>
+                            {item.correlation} correlation
+                          </span>
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            {parseInt(item.overlap) > 50 ? 'Strong relationship' : 'Weak relationship'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Activity Relationships */}
@@ -117,7 +174,7 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            {crossActivity.activityOverlaps.map((item, index) => (
+            {crossActivity.activityOverlaps.slice(0, 5).map((item, index) => (
               <div key={index}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                   <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.pair}</span>
@@ -147,6 +204,15 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
               </div>
             ))}
           </div>
+
+          {crossActivity.activityOverlaps.length > 5 && (
+            <button 
+              onClick={() => setShowAllRelationshipsModal(true)}
+              className="w-full mt-4 py-2 text-center text-xs sm:text-sm text-green-600 hover:text-green-800 font-medium border border-gray-200 rounded-lg hover:border-gray-300 transition"
+            >
+              View All Relationships →
+            </button>
+          )}
 
           <div className="mt-6 p-3 sm:p-4 bg-blue-50 rounded-lg">
             <div className="flex items-start gap-2 sm:gap-3">

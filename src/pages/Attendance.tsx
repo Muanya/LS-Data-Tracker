@@ -208,16 +208,21 @@ const Attendance: React.FC = () => {
 
     setSaving(true);
     try {
-      const dataToSave = {
+      const dataToSave: any = {
         attendees: selectedAttendees.map(a => ({
           id: a.id,
           name: a.firstName + ' ' + a.lastName
         })),
         activity: selectedActivity?.id || '',
-        date: selectedDate,
-        groupId: selectedCircleGroup!.id,
-        groupName: selectedCircleGroup!.name
+        date: selectedDate
       };
+
+      // Add group info only when activity requires groups
+      if (selectedActivity?.requiresGroup && selectedCircleGroup) {
+        dataToSave.groupId = selectedCircleGroup.id;
+        dataToSave.groupName = selectedCircleGroup.name;
+      }
+
       await apiService.recordAttendance(dataToSave);
       showMessage(`Attendance saved for ${selectedAttendees.length} attendees`, 'success');
       setSelectedAttendees([]);
