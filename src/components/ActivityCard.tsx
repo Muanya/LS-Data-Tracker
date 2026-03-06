@@ -24,8 +24,6 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
     uniqueAttendees: activity.stats.uniqueAttendees,
   };
 
-  console.log(activity, activity.name);
-
   return (
     <div
       className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-5 hover:shadow-lg transition-all duration-200 border-l-4"
