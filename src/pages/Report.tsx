@@ -70,7 +70,7 @@ export default function Report() {
             // Build date range from filters
             const startDate = filters.mode === "single" ? filters.singleDate : filters.dateFrom;
             const endDate = filters.mode === "single" ? filters.singleDate : filters.dateTo;
-            
+
             if (!startDate || !endDate) {
                 setError("Please select valid date range");
                 return;
@@ -79,10 +79,10 @@ export default function Report() {
             // Fetch all attendance data for the date range
             const attendanceData = await apiService.getAllAttendance(startDate, endDate);
             setAllData(attendanceData);
-            
+
             // Filter by activity for the records table
-            const filteredData = attendanceData.filter(record => 
-                record.activity === activity && 
+            const filteredData = attendanceData.filter(record =>
+                record.activity === activity &&
                 (!requiresGroup || !filters.group || record.groupName === filters.group)
             );
 
@@ -119,7 +119,7 @@ export default function Report() {
             <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
             {/* Header */}
-            <Header 
+            <Header
                 title="Activity Dashboard"
                 subtitle="Attendance Management System"
             >
@@ -134,7 +134,7 @@ export default function Report() {
             </Header>
 
             {/* Ambient glow */}
-            <div 
+            <div
                 className="fixed inset-0 pointer-events-none z-0 transition-all duration-500"
                 style={{
                     background: `radial-gradient(ellipse 60% 40% at 50% 0%, ${accent}18 0%, transparent 70%)`,
@@ -157,14 +157,13 @@ export default function Report() {
                                 const ac = a.color;
                                 const active = activity === a.id;
                                 return (
-                                    <button 
-                                        key={a.id} 
-                                        onClick={() => switchActivity(a.id)} 
-                                        className={`px-5 py-2.5 rounded-xl border font-bold text-sm cursor-pointer font-inherit flex items-center gap-2 transition-all duration-200 ${
-                                            active 
-                                                ? "border-transparent bg-gradient-to-r from-accent-start to-accent-end text-white shadow-lg" 
+                                    <button
+                                        key={a.id}
+                                        onClick={() => switchActivity(a.id)}
+                                        className={`px-5 py-2.5 rounded-xl border font-bold text-sm cursor-pointer font-inherit flex items-center gap-2 transition-all duration-200 ${active
+                                                ? "border-transparent bg-gradient-to-r from-accent-start to-accent-end text-white shadow-lg"
                                                 : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
-                                        }`}
+                                            }`}
                                         style={{
                                             ...(active && {
                                                 background: `linear-gradient(135deg, ${ac}, ${ac}80)`,
@@ -214,11 +213,10 @@ export default function Report() {
                             <button
                                 key={t}
                                 onClick={() => setTab(t)}
-                                className={`px-6 py-2.5 border-none font-bold text-sm cursor-pointer font-inherit transition-all duration-150 ${
-                                    tab === t 
-                                        ? `bg-[${accent}]/25 text-[${accent}]` 
+                                className={`px-6 py-2.5 border-none font-bold text-sm cursor-pointer font-inherit transition-all duration-150 ${tab === t
+                                        ? `bg-[${accent}]/25 text-[${accent}]`
                                         : "bg-transparent text-gray-600"
-                                }`}
+                                    }`}
                                 style={{
                                     background: tab === t ? `${accent}25` : "transparent",
                                     color: tab === t ? accent : "#4b5563",
@@ -231,17 +229,19 @@ export default function Report() {
                     </div>
 
                     <Card>
-                        {tab === "records" ? (
+                        {activitiesLoading ? (
+                            <div className="text-center py-10 text-gray-600">Loading activities...</div>
+                        ) : tab === "records" ? (
                             <AttendeeTable rows={rows} isCircle={requiresGroup} accent={accent} />
                         ) : (
-                            <StatsPanel rows={rows} allData={allData} isCircle={requiresGroup} accent={accent} />
+                            <StatsPanel rows={rows} allData={allData} isCircle={requiresGroup} accent={accent} activities={activities} />
                         )}
                     </Card>
 
                     {/* Empty state */}
                     {!rows.length && !loading && !error && (
                         <Card className="text-center py-16">
-                            <div className="text-5xl mb-4">{currentActivity?.icon || '🔵'}</div>
+                            <div className="flex justify-center items-center text-5xl mb-4">{currentActivity?.icon ? getIcon(currentActivity.icon) : '🔵'}</div>
                             <div className="font-bold text-lg text-gray-700 mb-2">Select filters and fetch records</div>
                             <div className="text-sm text-gray-600">
                                 {requiresGroup

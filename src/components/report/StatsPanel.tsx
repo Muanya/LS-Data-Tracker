@@ -1,16 +1,16 @@
 import type { FC } from 'react';
 import StatCard from './StatCard';
-import { ACCENT } from './constants';
-import type { AttendeeRow, AttendanceRecord } from '../../utils/types';
+import type { AttendeeRow, AttendanceRecord, Activity } from '../../utils/types';
 
 interface StatsPanelProps {
     rows: AttendeeRow[];
     allData: AttendanceRecord[];
     isCircle: boolean;
     accent: string;
+    activities: Activity[];
 }
 
-const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) => {
+const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent, activities }) => {
     if (!allData.length) return (
         <div className="text-center py-10 text-gray-600">No data to analyse.</div>
     );
@@ -81,14 +81,14 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                             {Object.entries(perActivity).sort((a, b) => b[1] - a[1]).map(([activityName, count], i) => {
                                 const pct = ((count / total) * 100).toFixed(1);
                                 const barW = ((count / Math.max(...Object.values(perActivity))) * 100).toFixed(0);
-                                const activityAccent = ACCENT[activityName as keyof typeof ACCENT];
+                                const activityAccent = activities.find(a => a.id === activityName)?.color || "#818cf8";
                                 return (
                                     <tr key={activityName} className={i % 2 === 0 ? "bg-transparent" : "bg-gray-50"}>
                                         <td className="px-4 py-2.5 border-b border-gray-100">
-                                            <span 
+                                            <span
                                                 className="rounded-md px-2.5 py-0.5 text-xs font-bold"
                                                 style={{
-                                                    backgroundColor: `${activityAccent}25`, 
+                                                    backgroundColor: `${activityAccent}25`,
                                                     color: activityAccent,
                                                 }}
                                             >
@@ -99,7 +99,7 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                                         <td className="px-4 py-2.5 border-b border-gray-100 text-gray-600">{pct}%</td>
                                         <td className="px-4 py-2.5 border-b border-gray-100">
                                             <div className="bg-gray-100 rounded h-2 w-35">
-                                                <div 
+                                                <div
                                                     className="rounded h-2 transition-all duration-400"
                                                     style={{
                                                         backgroundColor: activityAccent,
@@ -139,13 +139,13 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                                     return (
                                         <tr key={d} className={i % 2 === 0 ? "bg-transparent" : "bg-gray-50"}>
                                             <td className="px-4 py-2.5 border-b border-gray-100">
-                                                {new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric"})}
+                                                {new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                             </td>
                                             <td className="px-4 py-2.5 border-b border-gray-100 font-bold text-gray-900">{c}</td>
                                             <td className="px-4 py-2.5 border-b border-gray-100 text-gray-600">{pct}%</td>
                                             <td className="px-4 py-2.5 border-b border-gray-100">
                                                 <div className="bg-gray-100 rounded h-2 w-35">
-                                                    <div 
+                                                    <div
                                                         className="rounded h-2 transition-all duration-400"
                                                         style={{
                                                             backgroundColor: accent,
@@ -186,10 +186,10 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                                     return (
                                         <tr key={g} className={i % 2 === 0 ? "bg-transparent" : "bg-gray-50"}>
                                             <td className="px-4 py-2.5 border-b border-gray-100">
-                                                <span 
+                                                <span
                                                     className="rounded-md px-2.5 py-0.5 text-xs font-bold"
                                                     style={{
-                                                        backgroundColor: `${accent}25`, 
+                                                        backgroundColor: `${accent}25`,
                                                         color: accent,
                                                     }}
                                                 >
@@ -200,7 +200,7 @@ const StatsPanel: FC<StatsPanelProps> = ({ rows, allData, isCircle, accent }) =>
                                             <td className="px-4 py-2.5 border-b border-gray-100 text-gray-600">{pct}%</td>
                                             <td className="px-4 py-2.5 border-b border-gray-100">
                                                 <div className="bg-gray-100 rounded h-2 w-35">
-                                                    <div 
+                                                    <div
                                                         className="rounded h-2 transition-all duration-400"
                                                         style={{
                                                             backgroundColor: accent,

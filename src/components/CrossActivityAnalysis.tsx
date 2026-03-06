@@ -174,7 +174,10 @@ const CrossActivityAnalysis: React.FC<CrossActivityAnalysisProps> = ({ crossActi
           </div>
 
           <div className="space-y-3 sm:space-y-4">
-            {crossActivity.activityOverlaps.slice(0, 5).map((item, index) => (
+            {crossActivity.activityOverlaps
+              .sort((a, b) => parseInt(b.overlap) - parseInt(a.overlap))
+              .slice(0, 5)
+              .map((item, index) => (
               <div key={index}>
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                   <span className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.pair}</span>
